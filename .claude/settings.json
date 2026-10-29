@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "additionalDirectories": ["/Users/vicchorarana/Desktop/My-Apps/Leo"],
+    "allow": [
+      "Bash(./gradlew:*)",
+      "Bash(adb devices)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)"
+    ],
+    "deny": [
+      "Edit(//Users/vicchorarana/Desktop/My-Apps/Leo/**)",
+      "Write(//Users/vicchorarana/Desktop/My-Apps/Leo/**)"
+    ]
+  }
+}
