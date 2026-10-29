@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <style name="Theme.Leo" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- windowBackground avoids a white flash before Compose draws the Broadsheet background. -->
+    <style name="Theme.Leo" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/leo_window_background</item>
+    </style>
 </resources>
