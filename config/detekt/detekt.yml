@@ -1,0 +1,52 @@
+# Builds upon detekt's defaults (build.gradle.kts: buildUponDefaultConfig = true); only deviations are listed.
+# The layer rules mirror iOS ".swiftlint.yml": Features never import Data frameworks directly.
+
+style:
+  MagicNumber:
+    active: true
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+    ignoreNamedArgument: true
+    ignoreExtensionFunctions: true
+    ignoreEnums: true
+    ignoreRanges: true
+  MaxLineLength:
+    active: true
+    maxLineLength: 120
+  ForbiddenImport:
+    active: true
+    includes:
+      - '**/features/**'
+    imports:
+      - value: 'com.google.mlkit.*'
+        reason: 'Features talk to repository interfaces, never to ML Kit directly.'
+      - value: 'androidx.room.*'
+        reason: 'Features talk to repository interfaces, never to Room directly.'
+  UnusedPrivateMember:
+    active: true
+    ignoreAnnotated:
+      - 'Preview'
+
+naming:
+  FunctionNaming:
+    active: true
+    ignoreAnnotated:
+      - 'Composable'
+  TopLevelPropertyNaming:
+    active: true
+    constantPattern: '[A-Z][_A-Z0-9]*'
+
+complexity:
+  LongMethod:
+    active: true
+    ignoreAnnotated:
+      - 'Composable'
+  LongParameterList:
+    active: true
+    ignoreAnnotated:
+      - 'Composable'
+    ignoreDefaultParameters: true
+  TooManyFunctions:
+    active: true
+    ignoreAnnotated:
+      - 'Composable'

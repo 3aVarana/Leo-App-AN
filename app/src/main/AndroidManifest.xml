@@ -2,6 +2,21 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Leo has no network code. Libraries (ML Kit) may merge INTERNET in; strip it so the promise holds. -->
+    <uses-permission
+        android:name="android.permission.INTERNET"
+        tools:node="remove" />
+
+    <!--
+        Cloud backup is off everywhere; device-to-device transfer stays on.
+        - API 31+: data_extraction_rules.xml excludes every domain from <cloud-backup> and leaves
+          <device-transfer/> open, so a new phone gets the app's data.
+        - API 29-30: backup_rules.xml (fullBackupContent) excludes everything. Those versions have no separate
+          device-transfer rules, so this also skips transfer there.
+        allowBackup stays true so the two rule files are the one place that says what leaves the device. (Setting it
+        to false would also keep cloud backup off, and on API 31+ it does not block device-to-device transfer, but
+        then the exclude lists above would be dead configuration.)
+    -->
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -14,7 +29,6 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.Leo"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
