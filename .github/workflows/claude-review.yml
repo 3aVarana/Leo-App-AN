@@ -29,6 +29,8 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
+          # Claude can read .git/config, and nothing here pushes, so don't leave the token there.
+          persist-credentials: false
 
       - name: Review
         id: review
@@ -90,7 +92,9 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
+          # -e fails the step instead of posting an empty review when there's no output.
+          review=$(jq -er '.review' <<< "$REVIEW")
           body=$(printf '## Claude review\n\n%s\n\n<sub>Reviewed at %s. Advisory: this review never blocks merging.</sub>' \
-            "$(jq -r '.review' <<< "$REVIEW")" "$HEAD_SHA")
+            "$review" "$HEAD_SHA")
 
           gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" -f body="$body" > /dev/null
