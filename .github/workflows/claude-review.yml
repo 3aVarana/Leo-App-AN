@@ -1,0 +1,100 @@
+# Advisory Claude Code review of every pull request to main, when it's opened and on every push to its branch.
+# Not a required check: it never blocks merging. Claude only reads the code; this workflow posts each review
+# as a new comment on the pull request, so earlier reviews stay as a history.
+# Runs on the Claude subscription: the CLAUDE_CODE_OAUTH_TOKEN secret comes from `claude setup-token`.
+name: Claude Review
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+# A new push cancels the review of the previous commit.
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    name: Claude Review
+    # Secrets aren't available to pull requests from forks.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          # Claude can read .git/config, and nothing here pushes, so don't leave the token there.
+          persist-credentials: false
+
+      - name: Review
+        id: review
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ github.token }}
+          prompt: |
+            Review pull request #${{ github.event.pull_request.number }} of ${{ github.repository }}.
+
+            The checkout is at the PR head. See the whole change with
+            `git diff ${{ github.event.pull_request.base.sha }}...HEAD` and the commits with
+            `git log ${{ github.event.pull_request.base.sha }}..HEAD`. Read surrounding code as needed,
+            and read CLAUDE.md for the project rules.
+
+            Leo for Android is the Kotlin/Jetpack Compose port of an iOS reading comprehension app that
+            generates exercises with Gemini Nano on device (ML Kit GenAI Prompt API). minSdk 29,
+            Kotlin 2.2, manual DI through AppContainer (no Hilt). The iOS source isn't in this checkout,
+            so don't judge parity with iOS; the phase's .claude/workflow/phase-<n>/ files describe it.
+            Tests are JUnit 4 with kotlinx-coroutines-test and Roborazzi snapshots (Robolectric).
+            UI strings live in res/values/strings.xml, values-es/ and values-pt-rBR/.
+
+            The code is MVVM with repositories, enforced by Gradle modules: :domain is pure Kotlin/JVM,
+            :app holds data/ (repositories, genai/, room/, datastore/) and features/ (one package per
+            feature, plus theme/ and components/). Composables only lay out their ViewModel's state,
+            and ViewModels depend on repository interfaces and expose StateFlow; flag a composable that
+            calls a repository or ML Kit directly, and logic in a composable that belongs in a ViewModel
+            or in :domain. Tests use hand-written fakes, no mocking library.
+
+            Focus on, in this order:
+            1. Bugs and wrong behavior, including edge cases and error handling.
+            2. Coroutines: blocking the main thread, hard-coded Dispatchers instead of injected ones,
+               leaked or unscoped jobs, swallowed CancellationException, unsafe shared mutable state.
+            3. Android lifecycle: state lost on configuration change or process death, leaked Context
+               or Activity, collecting flows without lifecycle awareness.
+            4. Compose: state hoisting, unstable parameters and needless recomposition, missing keys
+               in lazy lists, missing TalkBack semantics, layouts that break at 200% font scale.
+            5. Privacy and dependencies: any network code or INTERNET permission, cloud backup of user
+               data, a dependency not listed in CLAUDE.md, a @Generable class missing from
+               app/src/main/keepRules/rules.keep, a Room schema change without a Migration and test.
+            6. Tests: missing coverage for new logic, UI changes without updated Roborazzi references,
+               new UI strings missing a translation.
+            7. API design and readability, only when it matters.
+
+            Don't comment on formatting or style that detekt, ktlint and Android Lint already check.
+            Only report issues you are confident about, and point to file and line for each.
+
+            Return the review as GitHub-flavored Markdown in the `review` field: a one or two sentence
+            summary, then the findings grouped by severity (Blocking, Should fix, Nit), or
+            "No issues found." Keep it concise.
+          claude_args: |
+            --allowedTools "Read,Grep,Glob,Bash(git diff:*),Bash(git log:*),Bash(git show:*)"
+            --json-schema '{"type":"object","properties":{"review":{"type":"string"}},"required":["review"]}'
+
+      - name: Post review
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REVIEW: ${{ steps.review.outputs.structured_output }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # -e fails the step instead of posting an empty review when there's no output.
+          review=$(jq -er '.review' <<< "$REVIEW")
+          body=$(printf '## Claude review\n\n%s\n\n<sub>Reviewed at %s. Advisory: this review never blocks merging.</sub>' \
+            "$review" "$HEAD_SHA")
+
+          gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" -f body="$body" > /dev/null
