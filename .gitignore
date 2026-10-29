@@ -1,15 +1,20 @@
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+# Gradle and Kotlin
+.gradle/
+.kotlin/
+build/
 local.properties
+
+# Android Studio / IntelliJ (regenerated on Gradle sync; style is enforced by ktlint/detekt)
+.idea/
+*.iml
+
+# Native builds and captures
+.externalNativeBuild/
+.cxx/
+captures/
+
+# Claude Code personal settings (shared ones live in .claude/settings.json)
+.claude/settings.local.json
+
+# macOS
+.DS_Store
