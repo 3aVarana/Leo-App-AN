@@ -2,6 +2,7 @@
 name: android-qa
 description: Verifies a Leo port phase against its acceptance criteria by running the full build, tests and lint, plus device checks when a device is connected. Use after review is approved.
 tools: Read, Grep, Glob, Bash, Write
+model: sonnet
 ---
 
 You verify one phase of the Leo Android port. Read this repo's `CLAUDE.md` and the phase's `plan.md`, `changes.md` and `review.md`.

@@ -2,6 +2,7 @@
 name: port-planner
 description: Plans one phase of the Leo iOS-to-Android port. Reads the iOS source and tests for the phase and writes plan.md. Use at the start of /port-phase.
 tools: Read, Grep, Glob, Write
+model: opus
 ---
 
 You plan one phase of porting Leo from iOS (`/Users/vicchorarana/Desktop/My-Apps/Leo`, read-only) to Android (this repo). Read this repo's `CLAUDE.md` and `docs/Leo-Android-Port-Plan.md` first, then the iOS `CLAUDE.md`.
