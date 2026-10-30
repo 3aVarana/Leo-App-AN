@@ -81,6 +81,21 @@ class RootScreenTests {
         composeRule.onNodeWithText("Home placeholder (phase 6)").assertIsDisplayed()
     }
 
+    /** A check that briefly says "unavailable" doesn't reset the back stack. */
+    @Test
+    fun theBackStackSurvivesTheModelBrieflyBecomingUnavailable() {
+        repository.stored = preferences
+        show()
+        composeRule.onNodeWithText("Open history").performClick()
+        composeRule.waitForIdle()
+
+        availability.set(ModelAvailability.Unavailable(ModelUnavailableReason.OTHER))
+        composeRule.waitForIdle()
+        availability.set(ModelAvailability.Available)
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("History placeholder (phase 7)").assertIsDisplayed()
+    }
+
     @Test
     fun homeNavigatesToHistoryAndBackPops() {
         repository.stored = preferences

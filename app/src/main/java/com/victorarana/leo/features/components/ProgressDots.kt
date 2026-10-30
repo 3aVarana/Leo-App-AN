@@ -10,10 +10,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -104,7 +106,7 @@ private fun Dot(
         contentAlignment = Alignment.Center,
     ) {
         BasicText(
-            text = NumberFormat.getIntegerInstance().format(number),
+            text = rememberIntegerFormat().format(number),
             style = numberStyle,
             maxLines = 1,
             // `minimumScaleFactor(0.5)`: the number shrinks with its circle, to half its size.
@@ -183,3 +185,10 @@ private fun DotState.dotStyle(
                 ring = colors.divider to DotUpcomingRingWidth,
             )
     }
+
+/** The app's locale, like the strings around the dots (a per-app language can differ from the JVM default). */
+@Composable
+private fun rememberIntegerFormat(): NumberFormat {
+    val locale = LocalConfiguration.current.locales[0]
+    return remember(locale) { NumberFormat.getIntegerInstance(locale) }
+}

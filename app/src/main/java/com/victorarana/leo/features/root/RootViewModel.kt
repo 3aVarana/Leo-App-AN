@@ -41,7 +41,7 @@ data class RootUiState(
      * Whether AICore has answered once. Until then [availability] is the provider's placeholder ("downloading"),
      * which must not reach the screen: the launch intro waits for the first real status.
      */
-    val availabilityChecked: Boolean = true,
+    val availabilityChecked: Boolean,
 )
 
 /**

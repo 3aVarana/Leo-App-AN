@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.compose.rememberNavController
 import com.victorarana.leo.domain.ModelAvailability
 import com.victorarana.leo.features.theme.leoScreenBackground
 
@@ -27,6 +28,9 @@ fun RootScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     // Back from another app, the model may have been downloaded or switched off meanwhile.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onResume() }
+    // Above the gates, so a check that briefly reports the model unavailable doesn't throw away the back stack
+    // (and a round in progress, once the quiz lives on Home): the graph comes back where it was.
+    val navController = rememberNavController()
 
     val availability = state.availability
     // The launch frame holds until the first screen is known: AICore has answered, and preferences matter only if
@@ -53,7 +57,7 @@ fun RootScreen(
                 when (it) {
                     Gate.Loading -> Box(Modifier.fillMaxSize().leoScreenBackground())
                     Gate.Onboarding -> OnboardingPlaceholder()
-                    Gate.App -> LeoNavHost()
+                    Gate.App -> LeoNavHost(navController = navController)
                 }
             }
         } else {
