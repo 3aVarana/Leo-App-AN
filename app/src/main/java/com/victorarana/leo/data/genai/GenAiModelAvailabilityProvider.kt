@@ -2,7 +2,6 @@ package com.victorarana.leo.data.genai
 
 import android.util.Log
 import com.google.mlkit.genai.common.DownloadStatus
-import com.google.mlkit.genai.prompt.Generation
 import com.google.mlkit.genai.prompt.GenerativeModel
 import com.victorarana.leo.data.repositories.ModelAvailabilityProvider
 import com.victorarana.leo.domain.ModelAvailability
@@ -17,6 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.transformWhile
 import kotlinx.coroutines.sync.Mutex
+import java.util.concurrent.atomic.AtomicInteger
 
 /** What AICore reports while it downloads the model, without ML Kit types, so the provider can be tested. */
 sealed interface ModelDownloadEvent {
@@ -45,7 +45,7 @@ interface ModelStatusSource {
 
 /** [ModelStatusSource] over the shared Gemini Nano client. */
 class MlKitModelStatusSource(
-    private val client: GenerativeModel = Generation.getClient(),
+    private val client: GenerativeModel = MlKitLanguageModel.sharedClient,
 ) : ModelStatusSource {
     override suspend fun checkStatus(): Int = client.checkStatus()
 
@@ -69,27 +69,42 @@ class GenAiModelAvailabilityProvider(
     override val availability: StateFlow<ModelAvailability> = state.asStateFlow()
     private val downloading = Mutex()
 
+    // Counts finished downloads, so a refresh() that read the status before one ended doesn't overwrite its result.
+    private val finishedDownloads = AtomicInteger()
+
+    /** While a download is collecting it owns [availability]: a refresh then (e.g. from prepare()) writes nothing. */
     override suspend fun refresh() {
-        state.value =
-            try {
-                modelAvailability(source.checkStatus())
-            } catch (cancelled: CancellationException) {
-                throw cancelled
-            } catch (
-                @Suppress("TooGenericExceptionCaught") error: Exception,
-            ) {
-                currentCoroutineContext().ensureActive()
-                Log.e(TAG, "checkStatus failed: $error")
-                ModelAvailability.Unavailable(ModelUnavailableReason.OTHER)
-            }
+        if (downloading.isLocked) return
+        val before = finishedDownloads.get()
+        val status = readStatus()
+        if (downloading.isLocked || finishedDownloads.get() != before) return
+        state.value = status
     }
 
+    private suspend fun readStatus(): ModelAvailability =
+        try {
+            modelAvailability(source.checkStatus())
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (
+            @Suppress("TooGenericExceptionCaught") error: Exception,
+        ) {
+            currentCoroutineContext().ensureActive()
+            Log.e(TAG, "checkStatus failed: $error")
+            ModelAvailability.Unavailable(ModelUnavailableReason.OTHER)
+        }
+
     override suspend fun download() {
-        // A second prepare() while this one is still collecting would restart the progress; the first one reports.
-        if (!downloading.tryLock()) return
+        if (!downloading.tryLock()) {
+            // One is already collecting and reports progress: wait for it to end instead of starting another.
+            downloading.lock()
+            downloading.unlock()
+            return
+        }
         try {
             collectDownload()
         } finally {
+            finishedDownloads.incrementAndGet()
             downloading.unlock()
         }
     }
@@ -121,7 +136,7 @@ class GenAiModelAvailabilityProvider(
                     }
                 }
             // Whatever the flow ended with, AICore has the last word.
-            if (state.value !is ModelAvailability.Unavailable) refresh()
+            if (state.value !is ModelAvailability.Unavailable) state.value = readStatus()
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (

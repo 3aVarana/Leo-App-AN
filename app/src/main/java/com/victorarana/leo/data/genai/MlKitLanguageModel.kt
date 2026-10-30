@@ -23,7 +23,7 @@ import kotlinx.coroutines.flow.flow
  *   whose keys are the [GeneratedExercise] properties, and [PartialJson] reads it back (plan D3).
  */
 class MlKitLanguageModel(
-    private val client: GenerativeModel = Generation.getClient(),
+    private val client: GenerativeModel = sharedClient,
 ) : LanguageModel {
     override fun streamExercise(
         instructions: String,
@@ -101,7 +101,9 @@ class MlKitLanguageModel(
     }
 
     companion object {
-        /** One client for the process: `Generation.getClient()` is created on first use. */
+        /** One Gemini Nano client for the process, shared with [MlKitModelStatusSource]; created on first use. */
+        val sharedClient: GenerativeModel by lazy { Generation.getClient() }
+
         val shared: MlKitLanguageModel by lazy { MlKitLanguageModel() }
 
         private const val TAG = "MlKitLanguageModel"

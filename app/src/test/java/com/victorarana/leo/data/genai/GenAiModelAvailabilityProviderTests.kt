@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -137,11 +138,12 @@ class GenAiModelAvailabilityProviderTests {
         }
 
     @Test
-    fun secondDownloadWhileOneRunsDoesNotStartAnother() =
+    fun prepareDuringADownloadKeepsItsProgressAndWaitsForIt() =
         runTest {
             val gate = CompletableDeferred<Unit>()
             val source =
                 FakeSource(
+                    status = { FeatureStatus.DOWNLOADING },
                     events = {
                         flow {
                             emit(ModelDownloadEvent.Started(bytesToDownload = 100))
@@ -155,12 +157,57 @@ class GenAiModelAvailabilityProviderTests {
 
             val first = launch { provider.download() }
             advanceUntilIdle()
-            provider.download()
+            // The app comes back to the foreground mid-download.
+            val second = launch { provider.prepare() }
+            advanceUntilIdle()
 
             assertEquals(1, source.downloads)
             assertEquals(ModelAvailability.Downloading(0.5f), provider.availability.value)
+            assertTrue("prepare() returns only when the download ends", second.isActive)
+
+            source.status = { FeatureStatus.AVAILABLE }
             gate.complete(Unit)
             first.join()
+            second.join()
+            assertEquals(1, source.downloads)
+            assertEquals(ModelAvailability.Available, provider.availability.value)
+        }
+
+    @Test
+    fun refreshThatReadsBeforeADownloadEndsDoesNotOverwriteItsResult() =
+        runTest {
+            val checking = CompletableDeferred<Unit>()
+            val release = CompletableDeferred<Unit>()
+            var slowStatus = false
+            val source =
+                object : ModelStatusSource {
+                    override suspend fun checkStatus(): Int {
+                        if (slowStatus) {
+                            slowStatus = false
+                            checking.complete(Unit)
+                            release.await()
+                            return FeatureStatus.DOWNLOADING
+                        }
+                        return FeatureStatus.AVAILABLE
+                    }
+
+                    override fun download(): Flow<ModelDownloadEvent> =
+                        flow {
+                            checking.await()
+                            emit(ModelDownloadEvent.Completed)
+                        }
+                }
+            val provider = GenAiModelAvailabilityProvider(source)
+
+            // A refresh reads "downloading" just before the download starts, and answers after it has ended.
+            slowStatus = true
+            val refresh = launch { provider.refresh() }
+            val download = launch { provider.download() }
+            advanceUntilIdle()
+            download.join()
+            release.complete(Unit)
+            refresh.join()
+
             assertEquals(ModelAvailability.Available, provider.availability.value)
         }
 
