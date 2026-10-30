@@ -76,6 +76,7 @@ class GenAiModelAvailabilityProvider(
     // check answering after a resume check).
     private val startedRefreshes = AtomicInteger()
     private var newestWrittenRefresh = 0
+    private val writeLock = Any()
 
     /** While a download is collecting it owns [availability]: a refresh then (e.g. from prepare()) writes nothing. */
     override suspend fun refresh() {
@@ -90,7 +91,7 @@ class GenAiModelAvailabilityProvider(
     private fun writeUnlessSuperseded(
         refresh: Int,
         status: ModelAvailability,
-    ) = synchronized(this) {
+    ) = synchronized(writeLock) {
         if (refresh >= newestWrittenRefresh) {
             newestWrittenRefresh = refresh
             state.value = status
