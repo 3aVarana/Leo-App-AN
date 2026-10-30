@@ -24,11 +24,14 @@ data class StoredRound(
     val results: List<Boolean>,
 )
 
-/** What a History row reads: a round without its answers. */
+/**
+ * What a History row reads: a round without its answers. [id] and [results] stay raw text and are
+ * decoded in the mapping, so one unreadable row is skipped instead of failing the whole list.
+ */
 data class StoredRoundSummary(
-    val id: UUID,
+    val id: String,
     val finishedAt: Instant,
-    val results: List<Boolean>,
+    val results: String,
 )
 
 /** A round with its answers, in no particular order (sort by `index`). */

@@ -40,8 +40,20 @@ private fun RoundAnswer.toStored(roundId: UUID): StoredAnswer =
         explanation = exercise.explanation,
     )
 
-internal fun StoredRoundSummary.toSummary(): RoundSummary =
-    RoundSummary(id = id, finishedAt = finishedAt, results = results)
+/** `null` when the id isn't a UUID or `results` isn't a JSON list of booleans. */
+internal fun StoredRoundSummary.toSummaryOrNull(): RoundSummary? {
+    val converters = RoundHistoryConverters()
+    return try {
+        RoundSummary(
+            id = converters.stringToUuid(id),
+            finishedAt = finishedAt,
+            results = converters.jsonToBooleans(results),
+        )
+    } catch (_: IllegalArgumentException) {
+        // Covers SerializationException too, which extends it.
+        null
+    }
+}
 
 /** `null` when the stored round has become unreadable: an unknown raw value, or an index out of range. */
 internal fun StoredRoundWithAnswers.toRecordOrNull(): RoundRecord? {

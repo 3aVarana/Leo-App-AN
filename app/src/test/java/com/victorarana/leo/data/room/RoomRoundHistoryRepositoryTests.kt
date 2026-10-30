@@ -1,6 +1,7 @@
 package com.victorarana.leo.data.room
 
 import android.content.Context
+import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
@@ -172,6 +173,45 @@ class RoomRoundHistoryRepositoryTests {
             assertEquals(round.id, restored?.id)
             assertEquals(round.answers.size, restored?.answers?.size)
         }
+
+    /** Text the type converters can't decode reads as an unreadable round, not an exception. */
+    @Test
+    fun undecodableOptionsReadAsAnUnreadableRound() =
+        runTest {
+            val file = temporaryFolder.newFile("RoundHistory.db")
+            val round = roundRecordFixture()
+            onDisk(file).apply {
+                save(round)
+                closeForTesting()
+            }
+            rawSql(file, "UPDATE StoredAnswer SET options = 'not json' WHERE roundId = '${round.id}'")
+
+            assertNull(onDisk(file).round(round.id))
+        }
+
+    /** One row with undecodable `results` is skipped; the others are still listed. */
+    @Test
+    fun undecodableResultsSkipOnlyThatSummary() =
+        runTest {
+            val file = temporaryFolder.newFile("RoundHistory.db")
+            val bad = roundRecordFixture(finishedAt = reference)
+            val good = roundRecordFixture(finishedAt = reference.plusSeconds(1000))
+            onDisk(file).apply {
+                save(bad)
+                save(good)
+                closeForTesting()
+            }
+            rawSql(file, "UPDATE StoredRound SET results = 'not json' WHERE id = '${bad.id}'")
+
+            assertEquals(listOf(good.id), onDisk(file).summaries(good.ageGroup).map { it.id })
+        }
+
+    private fun rawSql(
+        file: java.io.File,
+        sql: String,
+    ) {
+        SQLiteDatabase.openDatabase(file.absolutePath, null, SQLiteDatabase.OPEN_READWRITE).use { it.execSQL(sql) }
+    }
 
     @Test
     fun savingTheSameIdTwiceKeepsOneRound() =

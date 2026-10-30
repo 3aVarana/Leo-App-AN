@@ -25,6 +25,8 @@ import java.util.UUID
  * [ioDispatcher]) and, if that fails (full disk, damaged store), switches to an in-memory
  * database from [openInMemory]: the app still runs, history just isn't kept that launch.
  * A damaged file is left on disk, like iOS: [KeepDamagedFileFactory] stops SQLite from deleting it.
+ * The fallback only covers failures at open: damage SQLite finds later makes each later call throw
+ * for the rest of the launch, and the callers log it.
  *
  * With [rethrowSchemaErrors] (debug builds by default) an `IllegalStateException` from Room (an entity
  * changed without a version bump, or a missing migration) is rethrown instead of falling back, so every
@@ -78,15 +80,31 @@ class RoomRoundHistoryRepository internal constructor(
         dao().replaceRound(stored.round, stored.answers)
     }
 
-    /** Doesn't read the answers: the score and dots come from `results`, saved alongside them. */
+    /**
+     * Doesn't read the answers: the score and dots come from `results`, saved alongside them. A row that
+     * can't be decoded is skipped, so it doesn't hide the rest of the history.
+     */
     override suspend fun summaries(ageGroup: AgeGroup): List<RoundSummary> =
-        dao().summaries(ageGroup.rawValue).map { it.toSummary() }
+        dao().summaries(ageGroup.rawValue).mapNotNull { stored ->
+            stored.toSummaryOrNull().also { if (it == null) logUnreadable(stored.id) }
+        }
 
     override suspend fun round(id: UUID): RoundRecord? {
-        val stored = dao().round(id) ?: return null
-        val record = stored.toRecordOrNull()
-        if (record == null) Log.e(TAG, "Round $id has unreadable data, skipping it")
+        val dao = dao()
+        val record =
+            try {
+                // The type converters run inside the query and throw on text that doesn't decode.
+                val stored = dao.round(id) ?: return null
+                stored.toRecordOrNull()
+            } catch (_: IllegalArgumentException) {
+                null
+            }
+        if (record == null) logUnreadable(id)
         return record
+    }
+
+    private fun logUnreadable(id: Any) {
+        Log.e(TAG, "Round $id has unreadable data, skipping it")
     }
 
     override suspend fun delete(id: UUID) {

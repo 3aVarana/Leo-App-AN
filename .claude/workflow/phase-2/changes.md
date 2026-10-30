@@ -70,3 +70,10 @@ Final run after the review follow-up: `./gradlew ktlintFormat`, then `./gradlew 
 - `./gradlew ktlintFormat`: ok
 - `./gradlew assembleDebug :domain:test testDebugUnitTest detekt ktlintCheck lintDebug`: BUILD SUCCESSFUL (first run failed detekt `ReturnCount` in `RoundHistoryMapping.kt`; refactored to single-return `if` expressions, then green)
 - `./gradlew :domain:test testDebugUnitTest --rerun-tasks`: BUILD SUCCESSFUL
+
+## PR review follow-up (PR #7, Claude review)
+
+- Undecodable column text (`options`/`results` not JSON, id not a UUID) now reads as an unreadable round instead of throwing: `round(id)` catches the converter's `IllegalArgumentException` and logs the iOS "unreadable data" message; `StoredRoundSummary` keeps `id`/`results` as raw text decoded in `toSummaryOrNull()`, so one bad row is skipped and the rest of History still lists. Tests `undecodableOptionsReadAsAnUnreadableRound`, `undecodableResultsSkipOnlyThatSummary` (raw SQL on a file database). Schema and identity hash unchanged.
+- KDoc of `RoomRoundHistoryRepository`: the in-memory fallback covers failures at open only; corruption found later makes calls throw for that launch.
+- Test-only members shipping in release: kept on purpose (noted by the review as harmless).
+- `./gradlew assembleDebug :domain:test testDebugUnitTest detekt ktlintCheck lintDebug`: BUILD SUCCESSFUL (RoomRoundHistoryRepositoryTests 15, RoundHistorySchemaTests 3, 0 failures).
