@@ -28,8 +28,9 @@ fun RootScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     // Back from another app, the model may have been downloaded or switched off meanwhile.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onResume() }
-    // Above the gates, so a check that briefly reports the model unavailable doesn't throw away the back stack
-    // (and a round in progress, once the quiz lives on Home): the graph comes back where it was.
+    // Above the gates, so a check that briefly reports the model unavailable keeps the back stack and the
+    // destinations' ViewModels. `rememberSaveable` state inside destinations still resets when the graph leaves
+    // composition, so anything that must survive this (a round in progress) belongs in a ViewModel.
     val navController = rememberNavController()
 
     val availability = state.availability
