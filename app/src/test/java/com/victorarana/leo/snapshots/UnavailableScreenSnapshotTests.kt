@@ -24,7 +24,10 @@ class UnavailableScreenSnapshotTests {
         name: String,
         availability: ModelAvailability,
         fontScale: Float = 1f,
-    ) = composeRule.assertViewSnapshot(this::class, name, fontScale = fontScale) { UnavailableScreen(availability) }
+        isAnswered: Boolean = true,
+    ) = composeRule.assertViewSnapshot(this::class, name, fontScale = fontScale) {
+        UnavailableScreen(availability, isAnswered = isAnswered)
+    }
 
     private fun unavailable(reason: ModelUnavailableReason) = ModelAvailability.Unavailable(reason)
 
@@ -43,6 +46,10 @@ class UnavailableScreenSnapshotTests {
     @Test
     fun downloadingIndeterminate() =
         snapshot("downloading-indeterminate", ModelAvailability.Downloading(fraction = null))
+
+    /** After a slow launch check: the placeholder, before AICore answers. No "downloading" message. */
+    @Test
+    fun notAnsweredYet() = snapshot("not-answered", ModelAvailability.Downloading(fraction = null), isAnswered = false)
 
     @Test
     fun downloadingFortyTwoPercent() = snapshot("downloading-42", ModelAvailability.Downloading(fraction = 0.42f))

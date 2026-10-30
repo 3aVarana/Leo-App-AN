@@ -62,7 +62,7 @@ fun RootScreen(
                 }
             }
         } else {
-            UnavailableScreen(availability)
+            UnavailableScreen(availability, isAnswered = state.availabilityAnswered)
         }
     }
 }

@@ -302,6 +302,22 @@ class RootViewModelTests {
             assertEquals(PreferencesState.Ready(newer), root.preferencesState)
         }
 
+    /** Past the ceiling the screen may show the placeholder, but it isn't an answer until AICore gives one. */
+    @Test
+    fun availabilityIsAnsweredOnlyWhenTheCheckReturns() =
+        runTest {
+            val gate = CompletableDeferred<Unit>()
+            val slow = StubModelAvailabilityProvider(refreshGate = gate)
+            val root = RootViewModel(repository, slow)
+            advanceTimeBy(RootViewModel.AVAILABILITY_CHECK_CEILING_MILLIS + 1)
+            assertEquals(true, root.uiState.value.availabilityChecked)
+            assertEquals(false, root.uiState.value.availabilityAnswered)
+
+            gate.complete(Unit)
+            advanceUntilIdle()
+            assertEquals(true, root.uiState.value.availabilityAnswered)
+        }
+
     @Test
     fun onboardingDraftIsFifteen() {
         assertEquals(AgeGroup.FIFTEEN, RootViewModel.onboardingDraft.ageGroup)

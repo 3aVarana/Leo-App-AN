@@ -55,15 +55,19 @@ private const val MAX_RUNNING_FRACTION = 0.99f
 /** The words of one state: a title, the message, and for [UnavailableCopy.detail] a second paragraph. */
 private data class UnavailableCopy(
     @param:StringRes val title: Int,
-    @param:StringRes val message: Int,
+    @param:StringRes val message: Int?,
     @param:StringRes val detail: Int? = null,
 )
 
-private fun ModelAvailability.unavailableCopy(): UnavailableCopy? =
+private fun ModelAvailability.unavailableCopy(isAnswered: Boolean): UnavailableCopy? =
     when (this) {
         ModelAvailability.Available -> null
+        // Before AICore answers this is only the placeholder: the title and the bar, no claim of a download.
         ModelAvailability.Downloadable, is ModelAvailability.Downloading ->
-            UnavailableCopy(R.string.unavailable_preparing_title, R.string.unavailable_downloading_message)
+            UnavailableCopy(
+                R.string.unavailable_preparing_title,
+                if (isAnswered) R.string.unavailable_downloading_message else null,
+            )
         is ModelAvailability.Unavailable ->
             when (reason) {
                 ModelUnavailableReason.DEVICE_NOT_ELIGIBLE ->
@@ -84,13 +88,16 @@ private fun ModelAvailability.unavailableCopy(): UnavailableCopy? =
  * downloading. No button, like iOS (it can't act either, and a failed download gets no retry: plan Q3).
  * The port of `UnavailableView`, which takes a reason; here the model may also be on its way, so it takes the
  * whole [ModelAvailability] (D7). Draws nothing for [ModelAvailability.Available]: the root swaps screens first.
+ *
+ * @param isAnswered Whether AICore has answered yet; before that, a "downloading" state is only the placeholder.
  */
 @Composable
 fun UnavailableScreen(
     availability: ModelAvailability,
     modifier: Modifier = Modifier,
+    isAnswered: Boolean = true,
 ) {
-    val copy = availability.unavailableCopy() ?: return
+    val copy = availability.unavailableCopy(isAnswered) ?: return
     val colors = LeoTheme.colors
     ScrollingScreen(modifier) {
         TopOffset(height = 140.dp)
@@ -110,10 +117,12 @@ fun UnavailableScreen(
             style = LeoTextStyle.display(TITLE_SIZE).toTextStyle().copy(color = colors.ink),
         )
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            BasicText(
-                text = stringResource(copy.message),
-                style = LeoTextStyle.body.toTextStyle().copy(color = colors.inkSoft),
-            )
+            copy.message?.let {
+                BasicText(
+                    text = stringResource(it),
+                    style = LeoTextStyle.body.toTextStyle().copy(color = colors.inkSoft),
+                )
+            }
             copy.detail?.let {
                 BasicText(
                     text = stringResource(it),

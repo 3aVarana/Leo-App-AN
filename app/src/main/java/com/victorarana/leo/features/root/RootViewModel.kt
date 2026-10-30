@@ -38,10 +38,15 @@ data class RootUiState(
     val preferences: PreferencesState,
     val availability: ModelAvailability,
     /**
-     * Whether AICore has answered once. Until then [availability] is the provider's placeholder ("downloading"),
-     * which must not reach the screen: the launch intro waits for the first real status.
+     * Whether the launch frame may stop waiting: AICore has answered, or the launch check reached its ceiling.
+     * Until then [availability] is the provider's placeholder ("downloading"), which must not reach the screen.
      */
     val availabilityChecked: Boolean,
+    /**
+     * Whether AICore has really answered. After a slow launch check the screen shows [availability] while this is
+     * still false: the placeholder, which must not claim a download that hasn't started.
+     */
+    val availabilityAnswered: Boolean,
 )
 
 /**
@@ -54,6 +59,7 @@ class RootViewModel(
 ) : ViewModel() {
     private val preferences = MutableStateFlow<PreferencesState>(PreferencesState.Loading)
     private val availabilityChecked = MutableStateFlow(false)
+    private val availabilityAnswered = MutableStateFlow(false)
     private var resumeCheck: Job? = null
 
     /**
@@ -68,17 +74,23 @@ class RootViewModel(
 
     /** [availability] is combined, never copied, so the screen swaps as soon as the model becomes available. */
     val uiState: StateFlow<RootUiState> =
-        combine(preferences, availabilityProvider.availability, availabilityChecked, ::RootUiState)
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.Eagerly,
-                initialValue =
-                    RootUiState(
-                        preferences.value,
-                        availabilityProvider.availability.value,
-                        availabilityChecked = false,
-                    ),
-            )
+        combine(
+            preferences,
+            availabilityProvider.availability,
+            availabilityChecked,
+            availabilityAnswered,
+            ::RootUiState,
+        ).stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue =
+                RootUiState(
+                    preferences.value,
+                    availabilityProvider.availability.value,
+                    availabilityChecked = false,
+                    availabilityAnswered = false,
+                ),
+        )
 
     init {
         // Under the save lock, so a save waits for the load. The `Loading` check is defensive: on the main dispatcher
@@ -94,7 +106,11 @@ class RootViewModel(
         // bare ground; the check itself is never cancelled, and the download decision waits for its answer (on
         // the placeholder it would start a download that is not needed, or fail on a device that cannot run it).
         viewModelScope.launch {
-            val check = launch { availabilityProvider.refresh() }
+            val check =
+                launch {
+                    availabilityProvider.refresh()
+                    availabilityAnswered.value = true
+                }
             withTimeoutOrNull(AVAILABILITY_CHECK_CEILING_MILLIS) { check.join() }
             availabilityChecked.value = true
             check.join()
@@ -116,6 +132,7 @@ class RootViewModel(
         resumeCheck =
             viewModelScope.launch {
                 availabilityProvider.refresh()
+                availabilityAnswered.value = true
                 availabilityProvider.downloadIfNeeded()
             }
     }

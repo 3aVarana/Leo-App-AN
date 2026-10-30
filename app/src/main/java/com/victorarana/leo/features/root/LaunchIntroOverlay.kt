@@ -4,6 +4,7 @@ import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.text.BasicText
@@ -20,8 +21,10 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.graphicsLayer
@@ -130,7 +133,8 @@ fun LaunchIntroHost(
                 Phase.Launch -> headerFrame = reported
                 Phase.Playing -> {
                     val first = headerFrame
-                    val elapsed = (System.nanoTime() - moveBeganNanos) / MILLIS.toDouble() / MILLIS / MILLIS
+                    // The frame clock, like the rest of the intro, so tests can drive it.
+                    val elapsed = (withFrameNanos { it } - moveBeganNanos) / MILLIS.toDouble() / MILLIS / MILLIS
                     val moves =
                         LaunchIntro.exit(currentReduceMotion, hasTarget = first != null, headerMoved = headerMoved) ==
                             Exit.Move
@@ -146,7 +150,7 @@ fun LaunchIntroHost(
         if (phase == Phase.Launch) {
             delay(seconds(LaunchIntro.Timing.HOLD))
             snapshotFlow { currentIsReady }.first { it }
-            moveBeganNanos = System.nanoTime()
+            moveBeganNanos = withFrameNanos { it }
             phase = Phase.Playing
         }
         delay(
@@ -182,7 +186,17 @@ fun LaunchIntroHost(
                     .graphicsLayer {
                         alpha = pageProgress
                         translationY = if (reduceMotion) 0f else (1f - pageProgress) * risePx
-                    }.then(if (phase.isPageInteractive) Modifier else Modifier.clearAndSetSemantics {}),
+                    }.then(
+                        if (phase.isPageInteractive) {
+                            Modifier
+                        } else {
+                            // Hidden from TalkBack, and from keyboard and D-pad focus, until the swap.
+                            Modifier
+                                .clearAndSetSemantics {}
+                                .focusProperties { onEnter = { cancelFocusChange() } }
+                                .focusGroup()
+                        },
+                    ),
             ) { content() }
             if (phase.isRunning) {
                 val move =
