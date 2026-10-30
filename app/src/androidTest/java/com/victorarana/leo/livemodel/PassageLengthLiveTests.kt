@@ -7,7 +7,6 @@ import com.victorarana.leo.data.genai.ContentLanguage
 import com.victorarana.leo.data.genai.ExerciseGenerator
 import com.victorarana.leo.data.genai.ExerciseRejectedException
 import com.victorarana.leo.data.genai.GeneratedExercise
-import com.victorarana.leo.data.genai.MlKitLanguageModel
 import com.victorarana.leo.data.genai.toExercise
 import com.victorarana.leo.domain.AgeGroup
 import com.victorarana.leo.domain.ComprehensionSkill
@@ -49,13 +48,13 @@ class PassageLengthLiveTests(
         skill: ComprehensionSkill,
         run: Int,
     ) = runBlocking {
-        val generator = ExerciseGenerator(ContentLanguage.english, group, MlKitLanguageModel.shared)
+        val generator = ExerciseGenerator(ContentLanguage.english, group, liveLanguageModel)
         var line = "PASSAGE-LENGTH | ${group.rawValue} | ${skill.rawValue} | $topicId | #$run"
         val elapsed =
             measureTime {
                 try {
                     val snapshots =
-                        MlKitLanguageModel.shared
+                        liveLanguageModel
                             .streamExercise(
                                 generator.instructions,
                                 generator.prompt(topic, skill),

@@ -9,9 +9,9 @@ import com.victorarana.leo.domain.RoundTopic
 /** Writes each exercise with the on-device model. The port of `FoundationModelsExerciseRepository`. */
 class GenAiExerciseRepository(
     ageGroup: AgeGroup,
+    model: LanguageModel,
     /** Picked when the repository is made, once per round. */
     language: ContentLanguage = ContentLanguage.current(),
-    model: LanguageModel = MlKitLanguageModel.shared,
 ) : ExerciseRepository {
     /** Internal, so tests can check how it was built. */
     internal val generator = ExerciseGenerator(language, ageGroup, model)

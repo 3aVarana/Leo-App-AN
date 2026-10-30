@@ -27,6 +27,11 @@ interface ModelAvailabilityProvider {
      */
     suspend fun prepare() {
         refresh()
+        downloadIfNeeded()
+    }
+
+    /** The second half of [prepare], for a caller that needs to know when the status has been read. */
+    suspend fun downloadIfNeeded() {
         val status = availability.value
         if (status == Downloadable || status is Downloading) download()
     }

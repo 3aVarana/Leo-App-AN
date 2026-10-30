@@ -43,9 +43,9 @@ interface ModelStatusSource {
     fun download(): Flow<ModelDownloadEvent>
 }
 
-/** [ModelStatusSource] over the shared Gemini Nano client. */
+/** [ModelStatusSource] over the process's one Gemini Nano client (`AppContainer` owns it). */
 class MlKitModelStatusSource(
-    private val client: GenerativeModel = MlKitLanguageModel.sharedClient,
+    private val client: GenerativeModel,
 ) : ModelStatusSource {
     override suspend fun checkStatus(): Int = client.checkStatus()
 
@@ -62,7 +62,7 @@ class MlKitModelStatusSource(
 
 /** Gemini Nano's availability, from AICore. See [ModelAvailabilityProvider] for how it differs from iOS. */
 class GenAiModelAvailabilityProvider(
-    private val source: ModelStatusSource = MlKitModelStatusSource(),
+    private val source: ModelStatusSource,
 ) : ModelAvailabilityProvider {
     // Until the first check the screen shows an indeterminate "getting ready" state rather than an error.
     private val state = MutableStateFlow<ModelAvailability>(ModelAvailability.Downloading(fraction = null))

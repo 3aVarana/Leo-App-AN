@@ -2,4 +2,6 @@
 <resources>
     <!-- Background token, dark. -->
     <color name="leo_window_background">#1C1B1A</color>
+    <!-- Ink token. For the splash "Leo" only (see drawable/splash_icon.xml); Compose reads LeoColors. -->
+    <color name="leo_ink">#EFEDED</color>
 </resources>

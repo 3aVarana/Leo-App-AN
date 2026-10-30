@@ -13,8 +13,8 @@ import com.victorarana.leo.domain.TopicReviewOutcome
  */
 class GenAiTopicReviewRepository(
     private val genericRejection: () -> String,
+    private val model: LanguageModel,
     private val language: () -> ContentLanguage = { ContentLanguage.current() },
-    private val model: LanguageModel = MlKitLanguageModel.shared,
 ) : TopicReviewRepository {
     override suspend fun review(
         text: String,

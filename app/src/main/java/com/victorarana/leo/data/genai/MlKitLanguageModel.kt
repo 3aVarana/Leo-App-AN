@@ -3,7 +3,6 @@ package com.victorarana.leo.data.genai
 import android.util.Log
 import com.google.mlkit.genai.common.GenAiException
 import com.google.mlkit.genai.prompt.Feature
-import com.google.mlkit.genai.prompt.Generation
 import com.google.mlkit.genai.prompt.GenerativeModel
 import com.google.mlkit.genai.prompt.SystemInstruction
 import com.google.mlkit.genai.prompt.TextPart
@@ -23,7 +22,7 @@ import kotlinx.coroutines.flow.flow
  *   whose keys are the [GeneratedExercise] properties, and [PartialJson] reads it back (plan D3).
  */
 class MlKitLanguageModel(
-    private val client: GenerativeModel = sharedClient,
+    private val client: GenerativeModel,
 ) : LanguageModel {
     override fun streamExercise(
         instructions: String,
@@ -101,11 +100,6 @@ class MlKitLanguageModel(
     }
 
     companion object {
-        /** One Gemini Nano client for the process, shared with [MlKitModelStatusSource]; created on first use. */
-        val sharedClient: GenerativeModel by lazy { Generation.getClient() }
-
-        val shared: MlKitLanguageModel by lazy { MlKitLanguageModel() }
-
         private const val TAG = "MlKitLanguageModel"
     }
 }

@@ -98,4 +98,17 @@
     <string name="topic_art_movements">Art movements</string>
     <string name="exercise_generation_failed">We couldn\'t create this exercise. Please try again.</string>
     <string name="topic_review_generic_rejection">That topic isn\'t a good fit for your reading practice. Try another one.</string>
+    <string name="progress_dots_accessibility_label">Text %1$d of %2$d</string>
+    <string name="review_label">Review</string>
+    <string name="history_button_label">Past rounds</string>
+    <string name="custom_topic_chip_remove_action">Remove this topic</string>
+    <string name="age_group_label">Age group</string>
+    <string name="unavailable_title">Gemini Nano needed</string>
+    <string name="unavailable_preparing_title">Getting Leo ready</string>
+    <string name="unavailable_device_not_eligible_message">This device doesn\'t support Gemini Nano, which Leo uses to create exercises.</string>
+    <string name="unavailable_device_not_eligible_detail">Gemini Nano runs on the phone itself and only on supported devices. Emulators can\'t run it.</string>
+    <string name="unavailable_other_message">Gemini Nano isn\'t available right now.</string>
+    <string name="unavailable_downloading_message">Gemini Nano is downloading to this device. Leo opens when it\'s ready.</string>
+    <string name="unavailable_download_failed_message">Gemini Nano couldn\'t be downloaded.</string>
+    <string name="unavailable_download_progress">Download progress</string>
 </resources>
