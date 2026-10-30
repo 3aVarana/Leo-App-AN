@@ -56,6 +56,13 @@ class RootViewModel(
     private val availabilityChecked = MutableStateFlow(false)
     private var resumeCheck: Job? = null
 
+    /**
+     * Whether this Activity played the launch intro. Kept here, not process-wide: a rotation keeps it, a new
+     * Activity (a warm start after backing out, which shows the system splash again) plays the intro again.
+     */
+    var introPlayed = false
+        private set
+
     // Saves run one at a time, so a quick second save of the same preferences sees the first one's result.
     private val saving = Mutex()
 
@@ -83,6 +90,8 @@ class RootViewModel(
         // bare ground; the check itself is never cancelled, and the download decision waits for its answer (on
         // the placeholder it would start a download that is not needed, or fail on a device that cannot run it).
         // It is also the first resume check, so the first ON_RESUME (right after launch) doesn't ask AICore again.
+        // It stays active through a first download too (`downloadIfNeeded()` returns when `download()` does), so
+        // resumes meanwhile ask nothing: the download owns the availability then, and a refresh would write nothing.
         resumeCheck =
             viewModelScope.launch {
                 val check = launch { availabilityProvider.refresh() }
@@ -106,6 +115,10 @@ class RootViewModel(
                 availabilityProvider.refresh()
                 availabilityProvider.downloadIfNeeded()
             }
+    }
+
+    fun onIntroPlayed() {
+        introPlayed = true
     }
 
     /** Saves and applies [newPreferences]. Does nothing when they haven't changed. */

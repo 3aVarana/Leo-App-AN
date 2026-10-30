@@ -71,7 +71,13 @@ fun Modifier.launchWordmarkTarget(): Modifier {
 }
 
 /**
- * Plays the launch intro over [content], the first time it's shown after the process starts.
+ * Plays the launch intro over [content], unless [hasPlayed].
+ *
+ * @param hasPlayed Whether this Activity already played it. The caller keeps it where a configuration change
+ * doesn't reset it but a new Activity does (the root ViewModel): on Android 12+ the system splash shows again
+ * on a warm start (the reader backed out, the process lived on), and the intro must take over from it.
+ * @param onPlayed Called once the intro has finished. Not before: an Activity recreated mid-intro plays it again
+ * from the launch frame, which still waits for [isReady].
  *
  * @param initialPhase `plays = false` freezes the intro at this phase, for snapshots and previews. Reduced motion
  * comes from `LocalReduceMotion` or the system, like everywhere else.
@@ -87,11 +93,13 @@ fun LaunchIntroHost(
     initialPhase: Phase? = null,
     plays: Boolean = true,
     isReady: Boolean = true,
+    hasPlayed: Boolean = false,
+    onPlayed: () -> Unit = {},
     content: @Composable () -> Unit,
 ) {
     val reduceMotion = rememberReduceMotion()
     val target = remember { LaunchWordmarkTarget() }
-    var phase by remember { mutableStateOf(initialPhase ?: if (LaunchIntro.hasPlayed) Phase.Done else Phase.Launch) }
+    var phase by remember { mutableStateOf(initialPhase ?: if (hasPlayed) Phase.Done else Phase.Launch) }
     // The header wordmark's frame, kept from the first frame, while nothing has moved yet.
     var headerFrame by remember { mutableStateOf<Rect?>(null) }
     var overlayHeight by remember { mutableStateOf(0f) }
@@ -111,6 +119,7 @@ fun LaunchIntroHost(
     // The effect below outlives recompositions; it must see the latest value, not the first one.
     val currentIsReady by rememberUpdatedState(isReady)
     val currentReduceMotion by rememberUpdatedState(reduceMotion)
+    val currentOnPlayed by rememberUpdatedState(onPlayed)
 
     // The header's frame is read here only while the intro runs: once it is done, a header that moves (scrolling)
     // recomposes nothing in the host.
@@ -144,7 +153,7 @@ fun LaunchIntroHost(
             seconds(if (currentReduceMotion) LaunchIntro.Timing.REDUCED_MOTION_FADE else LaunchIntro.Timing.PLAYING),
         )
         // Only now: an Activity recreated during the hold must wait for `isReady` again, not skip to the page.
-        LaunchIntro.hasPlayed = true
+        currentOnPlayed()
         phase = Phase.Done
     }
 

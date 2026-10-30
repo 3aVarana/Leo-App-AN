@@ -14,8 +14,6 @@ import com.victorarana.leo.domain.readerPreferencesFixture
 import com.victorarana.leo.features.theme.LeoTheme
 import com.victorarana.leo.support.PreferencesRepositorySpy
 import com.victorarana.leo.support.StubModelAvailabilityProvider
-import org.junit.After
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -31,19 +29,9 @@ class RootScreenTests {
     private val availability = StubModelAvailabilityProvider()
     private val preferences = readerPreferencesFixture(AgeGroup.NINE)
 
-    @Before
-    fun skipTheIntro() {
-        // The intro plays once per process and blocks taps meanwhile; these tests are about the gates.
-        LaunchIntro.hasPlayed = true
-    }
-
-    @After
-    fun resetTheIntro() {
-        LaunchIntro.hasPlayed = false
-    }
-
     private fun show() {
-        val viewModel = RootViewModel(repository, availability)
+        // The intro blocks taps while it plays; these tests are about the gates.
+        val viewModel = RootViewModel(repository, availability).apply { onIntroPlayed() }
         composeRule.setContent { LeoTheme { RootScreen(viewModel) } }
         composeRule.waitForIdle()
     }

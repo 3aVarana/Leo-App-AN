@@ -34,7 +34,12 @@ fun RootScreen(
     val isReady =
         state.availabilityChecked &&
             (availability !is ModelAvailability.Available || state.preferences !is PreferencesState.Loading)
-    LaunchIntroHost(modifier = modifier, isReady = isReady) {
+    LaunchIntroHost(
+        modifier = modifier,
+        isReady = isReady,
+        hasPlayed = viewModel.introPlayed,
+        onPlayed = viewModel::onIntroPlayed,
+    ) {
         if (availability is ModelAvailability.Available) {
             val gate =
                 when (state.preferences) {

@@ -48,6 +48,7 @@ private const val TITLE_SIZE = 40f
 private const val PULSE_MILLIS = 900
 private const val PULSE_LOW_ALPHA = 0.35f
 private const val STATIC_ALPHA = 0.6f
+private const val MAX_RUNNING_FRACTION = 0.99f
 
 /** The words of one state: a title, the message, and for [UnavailableCopy.detail] a second paragraph. */
 private data class UnavailableCopy(
@@ -130,7 +131,13 @@ fun UnavailableScreen(
 private fun DownloadProgress(fraction: Float?) {
     val colors = LeoTheme.colors
     val description = stringResource(R.string.unavailable_download_progress)
-    val percent = fraction?.let { NumberFormat.getPercentInstance().format(it.toDouble()) }
+    // Capped at 99% below a whole download, so rounding never says 100% while it is still running. (Not rounded
+    // down: a float such as 0.42 is just under it and would read 41%.)
+    val percent =
+        fraction?.let {
+            val shown = if (it < 1f) minOf(it, MAX_RUNNING_FRACTION) else it
+            NumberFormat.getPercentInstance().format(shown.toDouble())
+        }
     Column(
         modifier =
             Modifier

@@ -8,10 +8,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import com.victorarana.leo.features.theme.LeoTheme
-import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -22,16 +20,6 @@ import org.robolectric.RobolectricTestRunner
 class LaunchIntroHostTests {
     @get:Rule
     val composeRule = createAndroidComposeRule<ComponentActivity>()
-
-    @Before
-    fun playTheIntro() {
-        LaunchIntro.hasPlayed = false
-    }
-
-    @After
-    fun resetTheIntro() {
-        LaunchIntro.hasPlayed = false
-    }
 
     /** `isReady` starting false (AICore still answering) must not leave the intro stuck on its launch frame. */
     @Test
@@ -57,19 +45,31 @@ class LaunchIntroHostTests {
     @Test
     fun introCountsAsPlayedOnlyOnceItFinishes() {
         var isReady by mutableStateOf(false)
+        var played = false
         composeRule.setContent {
             LeoTheme {
-                LaunchIntroHost(isReady = isReady) { BasicText("Page") }
+                LaunchIntroHost(isReady = isReady, onPlayed = { played = true }) { BasicText("Page") }
             }
         }
         composeRule.mainClock.advanceTimeBy(HOLD_AND_MORE_MILLIS)
-        assertFalse(LaunchIntro.hasPlayed)
+        assertFalse(played)
 
         isReady = true
         composeRule.waitForIdle()
         composeRule.mainClock.advanceTimeBy(INTRO_AND_MORE_MILLIS)
         composeRule.waitForIdle()
-        assertTrue(LaunchIntro.hasPlayed)
+        assertTrue(played)
+    }
+
+    /** An Activity that already played the intro (after a rotation) shows the page at once. */
+    @Test
+    fun aPlayedIntroShowsThePageAtOnce() {
+        composeRule.setContent {
+            LeoTheme {
+                LaunchIntroHost(isReady = false, hasPlayed = true) { BasicText("Page") }
+            }
+        }
+        composeRule.onNodeWithText("Page").assertExists()
     }
 
     private companion object {
