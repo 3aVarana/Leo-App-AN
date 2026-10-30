@@ -1,9 +1,7 @@
 package com.victorarana.leo.features.components
 
-import android.app.Application
 import android.content.Context
 import android.content.res.Configuration
-import androidx.test.core.app.ApplicationProvider
 import com.victorarana.leo.domain.AgeGroup
 import com.victorarana.leo.domain.ComprehensionSkill
 import com.victorarana.leo.domain.DefaultTopics
@@ -17,7 +15,7 @@ import java.util.Locale
 
 @RunWith(RobolectricTestRunner::class)
 class DomainLabelsTests {
-    private val base: Context get() = ApplicationProvider.getApplicationContext<Application>()
+    private val base: Context get() = RuntimeEnvironment.getApplication()
 
     private fun context(tag: String): Context {
         val configuration = Configuration(base.resources.configuration)

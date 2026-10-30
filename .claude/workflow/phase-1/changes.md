@@ -1,6 +1,6 @@
 # Phase 1: Domain, changes
 
-Branch `port/phase-1-domain`. Nothing committed.
+Branch `port/phase-1-domain`, PR #6.
 
 ## Files added
 
@@ -61,8 +61,14 @@ Fixed after `review.md`:
 5. Comment on `characterCount` records the JDK 20+ grapheme dependency (guarded by the family-emoji test; no toolchain change).
 6. `ResourceTopicNames` keeps `applicationContext`. `DomainLabelsTests` therefore sets the locale on the application via `RuntimeEnvironment.setQualifiers` instead of a configuration context. Phase 5 should check that a per-app language change reaches these resources.
 7. Removed the vacuous `assertNotNull`; 8. added the missing `roundSettings` equality expectation; 9. `ReaderPreferences.DEFAULT_IS_READING_TIMER_ON` is shared by the class and the serializer surrogate.
-10. Left as is: `androidx.test.core` (`ApplicationProvider`) has no catalog entry, so no dependency was added.
+10. `DomainLabelsTests` gets its context from `RuntimeEnvironment.getApplication()`, so it no longer relies on `androidx.test.core` coming in through Robolectric.
 11. `libs.versions.toml` has a comment next to `kotlinxSerialization` explaining 1.11.0.
 
-Re-run of `./gradlew assembleDebug :domain:test testDebugUnitTest detekt ktlintCheck lintDebug --continue`: all pass; `:domain` 80 tests, `:app` 32, 0 failures.
+Re-run after the review (test counts from here on): `./gradlew assembleDebug :domain:test testDebugUnitTest detekt ktlintCheck lintDebug --continue`: all pass; `:domain` 80 tests, `:app` 32, 0 failures.
 - Not run: `connectedDebugAndroidTest` (nothing in this phase is instrumented).
+
+## Third Claude review on PR #6
+
+- `LeoJson`'s KDoc now scopes it to `ReaderPreferences` and says `coerceInputValues` also coerces unknown enum values to their default.
+- `DomainLabelsTests` uses `RuntimeEnvironment.getApplication()` (item 10 above).
+- Deferred: moving `ResourceTopicNames` from `features/components/` to `data/` (decide with `AppContainer` in phase 4), and a Compose stability config for the `:domain` value types (phase 5, with the first screens).

@@ -8,8 +8,11 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 
 /**
- * The JSON configuration for everything the domain saves: defaults are written (the saved format
+ * The JSON configuration for the saved [ReaderPreferences]: defaults are written (the saved format
  * always has all five keys, like iOS) and unknown keys are ignored (like `JSONDecoder`).
+ *
+ * `coerceInputValues` also turns an unknown enum value on a property with a default into that
+ * default, without an error. Don't reuse this instance for a new saved type unless that is wanted.
  */
 val LeoJson =
     Json {
