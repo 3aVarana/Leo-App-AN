@@ -5,16 +5,18 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 
 /**
  * The graph of the onboarded app: Home, with History pushed over it. Back from History pops (iOS: the
  * `NavigationStack`). The placeholders are replaced in phases 6 and 7.
+ *
+ * @param navController Owned by the caller, above the gates, so the back stack outlives this graph leaving
+ * composition (see `RootScreen`).
  */
 @Composable
 fun LeoNavHost(
+    navController: NavHostController,
     modifier: Modifier = Modifier,
-    navController: NavHostController = rememberNavController(),
 ) {
     NavHost(navController = navController, startDestination = LeoRoute.Home, modifier = modifier) {
         composable<LeoRoute.Home> {

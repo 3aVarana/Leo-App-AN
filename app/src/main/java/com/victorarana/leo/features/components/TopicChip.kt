@@ -111,9 +111,8 @@ private fun ChipLabel(
         // Every chip reserves Android's 48dp touch height, the static one too, so chips in a row line up; the
         // drawn chip keeps its iOS size, centered.
         modifier =
-            Modifier
+            modifier
                 .minimumInteractiveComponentSize()
-                .then(modifier)
                 .background(if (isOn) colors.accent100 else Color.Transparent, ChipShape)
                 .then(if (isOn) Modifier else Modifier.border(1.dp, colors.divider, ChipShape))
                 .padding(vertical = 7.dp, horizontal = 12.dp)

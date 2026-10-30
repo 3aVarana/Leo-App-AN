@@ -81,7 +81,8 @@ class RootViewModel(
             )
 
     init {
-        // Under the save lock, and only while still loading: a save that lands first is not overwritten.
+        // Under the save lock, so a save waits for the load. The `Loading` check is defensive: on the main dispatcher
+        // the load takes the lock before any save can run.
         viewModelScope.launch {
             saving.withLock {
                 val loaded = preferencesRepository.load()?.let(PreferencesState::Ready) ?: PreferencesState.NotOnboarded
