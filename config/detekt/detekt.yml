@@ -22,6 +22,8 @@ style:
         reason: 'Features talk to repository interfaces, never to ML Kit directly.'
       - value: 'androidx.room.*'
         reason: 'Features talk to repository interfaces, never to Room directly.'
+      - value: 'androidx.datastore.*'
+        reason: 'Features talk to repository interfaces, never to DataStore directly.'
   UnusedPrivateMember:
     active: true
     ignoreAnnotated:

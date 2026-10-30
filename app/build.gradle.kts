@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
     alias(libs.plugins.roborazzi)
     alias(libs.plugins.ktlint)
     alias(libs.plugins.detekt)
@@ -36,6 +38,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     testOptions {
         unitTests {
@@ -51,6 +54,11 @@ android {
         abortOnError = true
         lintConfig = file("lint.xml")
     }
+}
+
+// The exported schema JSON per version, committed so a migration can be written and tested against it.
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 roborazzi {
@@ -102,7 +110,14 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    implementation(libs.kotlinx.coroutines.android)
+    ksp(libs.androidx.room.compiler)
     testImplementation(libs.junit)
+    testImplementation(testFixtures(project(":domain")))
+    testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.robolectric)
     testImplementation(platform(libs.androidx.compose.bom))
     testImplementation(libs.androidx.compose.ui.test.junit4)
