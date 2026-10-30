@@ -72,13 +72,29 @@ class GenAiModelAvailabilityProvider(
     // Counts finished downloads, so a refresh() that read the status before one ended doesn't overwrite its result.
     private val finishedDownloads = AtomicInteger()
 
+    // Numbers each refresh, so one that started earlier never writes after one that started later (a hung launch
+    // check answering after a resume check).
+    private val startedRefreshes = AtomicInteger()
+    private var newestWrittenRefresh = 0
+
     /** While a download is collecting it owns [availability]: a refresh then (e.g. from prepare()) writes nothing. */
     override suspend fun refresh() {
         if (downloading.isLocked) return
+        val refresh = startedRefreshes.incrementAndGet()
         val before = finishedDownloads.get()
         val status = readStatus()
         if (downloading.isLocked || finishedDownloads.get() != before) return
-        state.value = status
+        writeUnlessSuperseded(refresh, status)
+    }
+
+    private fun writeUnlessSuperseded(
+        refresh: Int,
+        status: ModelAvailability,
+    ) = synchronized(this) {
+        if (refresh >= newestWrittenRefresh) {
+            newestWrittenRefresh = refresh
+            state.value = status
+        }
     }
 
     private suspend fun readStatus(): ModelAvailability =

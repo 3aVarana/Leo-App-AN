@@ -37,6 +37,7 @@ fun RootScreen(
     LaunchIntroHost(
         modifier = modifier,
         isReady = isReady,
+        // Read once, when the host starts (a plain property, not state): later changes don't need to recompose.
         hasPlayed = viewModel.introPlayed,
         onPlayed = viewModel::onIntroPlayed,
     ) {
