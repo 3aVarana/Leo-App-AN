@@ -8,6 +8,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -43,6 +44,9 @@ import com.victorarana.leo.features.theme.LeoTheme
 import com.victorarana.leo.features.theme.toTextStyle
 
 private val ControlShape = RoundedCornerShape(2.dp)
+
+// Android's minimum touch target; iOS draws the segments shorter (about 34pt).
+private val MIN_TOUCH_HEIGHT = 48.dp
 
 private enum class AgeControlSlot { Fit, Segments, Menu }
 
@@ -139,6 +143,7 @@ private fun Segment(
     Box(
         modifier =
             Modifier
+                .heightIn(min = MIN_TOUCH_HEIGHT)
                 .background(if (isSelected) colors.accent else Color.Transparent)
                 .selectable(
                     selected = isSelected,
@@ -177,6 +182,7 @@ private fun AgeMenu(
             modifier =
                 Modifier
                     .fillMaxWidth()
+                    .heightIn(min = MIN_TOUCH_HEIGHT)
                     .border(1.dp, colors.divider, ControlShape)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },

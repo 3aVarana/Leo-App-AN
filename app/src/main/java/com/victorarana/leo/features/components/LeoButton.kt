@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -88,6 +89,8 @@ fun LeoButton(
         }
     }
 
+    // At least 48dp to touch (Android's minimum, `minimumInteractiveComponentSize`): the 44dp secondary and ghost
+    // frames keep their size and are centered in it.
     CompositionLocalProvider(
         LocalContentColor provides foreground,
         LocalTextStyle provides textStyle.toTextStyle().copy(textAlign = TextAlign.Center),
@@ -95,6 +98,7 @@ fun LeoButton(
         Row(
             modifier =
                 modifier
+                    .minimumInteractiveComponentSize()
                     .alpha(if (enabled) 1f else DISABLED_ALPHA)
                     .then(frame)
                     .background(fill, ButtonShape)

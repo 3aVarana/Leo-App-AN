@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -107,8 +108,12 @@ private fun ChipLabel(
     // iOS draws a 14pt medium-weight symbol, whose mark fills most of its box; a Material glyph fills about 70%.
     val symbolSize = CHIP_SYMBOL_SIZE.dp.scaled(relativeTo = 15f)
     Row(
+        // Every chip reserves Android's 48dp touch height, the static one too, so chips in a row line up; the
+        // drawn chip keeps its iOS size, centered.
         modifier =
-            modifier
+            Modifier
+                .minimumInteractiveComponentSize()
+                .then(modifier)
                 .background(if (isOn) colors.accent100 else Color.Transparent, ChipShape)
                 .then(if (isOn) Modifier else Modifier.border(1.dp, colors.divider, ChipShape))
                 .padding(vertical = 7.dp, horizontal = 12.dp)

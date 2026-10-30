@@ -57,7 +57,7 @@ fun HistoryButton(
         Box(
             modifier =
                 modifier
-                    .defaultMinSize(minWidth = 44.dp, minHeight = 44.dp)
+                    .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
