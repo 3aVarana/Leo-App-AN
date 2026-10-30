@@ -1,0 +1,9 @@
+PROMPT
+
+Answer with only a JSON object with these keys, in this order:
+"passage" (string): The reading passage: a story or an informative text, written exactly as it would appear in a book. Plain text, no headings, no markdown, no commentary about the text itself
+"question" (string): One question that tests the skill requested in the prompt and can only be answered by someone who understood the passage
+"correctAnswer" (string): The correct answer: a short phrase or sentence, at most 12 words, in your own words rather than copied from the passage
+"incorrectAnswers" (array of exactly 3 strings): Three wrong answers that a careless reader might pick: each about the topic, the same length, grammatical form and punctuation as the correct answer, and clearly wrong according to the passage
+"explanation" (string): One or two short sentences explaining why the correct answer is right, pointing to what the passage says
+"title" (string): A short, engaging title for the passage, at most 6 words

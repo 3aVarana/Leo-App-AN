@@ -1,0 +1,13 @@
+# Phase 3: the on-device model
+
+**`@Generable` via KSP (iOS: macro).** `@Generable` on a `data class` makes the `genai-schema-compiler` KSP processor write `GeneratedExercise_GeneratedProvider` at build time (see `app/build/generated/ksp`). Swift macros expand inside the compiler; KSP is a separate pass that emits Kotlin files. Annotate constructor parameters (`@param:Guide`); `.count(3)` is `minItems = 3, maxItems = 3`. R8 renames members unless `rules.keep` keeps them (`data/genai/GeneratedExercise.kt`, `app/src/main/keepRules/rules.keep`). Today's limit: structured output can't stream, so exercises are streamed as text and parsed (`PartialJson.kt`, `MlKitLanguageModel.kt`).
+
+**AICore, `checkStatus()` and the download (iOS: `SystemLanguageModel.availability`).** The model is not part of the OS image: a system service (AICore) may have to download it. So availability is a `suspend` call with four states, and a `StateFlow` the UI observes instead of an `@Observable` property read (`ModelAvailabilityProvider.kt`, `GenAiModelAvailabilityProvider.kt`, `ModelAvailabilityMapping.kt`). The app has no `INTERNET` permission: AICore downloads, not Leo.
+
+**`suspend` + `Flow` vs `AsyncSequence`.** `for try await snapshot in stream` becomes `flow.collect { }`; abandoning a runaway passage is throwing inside `collect`, which cancels the upstream request (`ExerciseGenerator.respond`). Unlike Swift's `CancellationError`, `CancellationException` is an ordinary `Exception` subclass, so a `catch (e: Exception)` swallows cancellation unless a `catch (CancellationException)` rethrows it first.
+
+**ICU on a device, regex on the JVM.** Android's `java.util.regex`, `BreakIterator` and `android.icu` are ICU; local unit tests run on the JDK, which differs (`\s`, `(?i)`, no `android.icu`). Tests using `ContentLanguage` run under Robolectric, and `androidTest/.../RegexAndWordCountDeviceTests.kt` repeats the Unicode cases on a real runtime.
+
+**Library Kotlin version (iOS: Swift module stability).** A Kotlin library carries metadata stamped with the compiler version that built it, and the compiler refuses metadata newer than itself. ML Kit was built with Kotlin 2.4, so the project moved from 2.2.10 to 2.4.0 (`gradle/libs.versions.toml`). `-Xskip-metadata-version-check` would also compile, but it switches the check off for every library, the stdlib included.
+
+**Test seams (iOS: `@testable import`, protocol fakes).** `LanguageModel` is the seam under `ExerciseGenerator`, so the 3-topic loop is unit-tested with `FakeLanguageModel` (`app/src/test/.../support/`) without a device. Live-model tests are `androidTest` classes with a `TestRule` that skips them unless `checkStatus() == AVAILABLE`, the counterpart of `.enabled(if:)`.

@@ -14,6 +14,8 @@ room = "2.8.5"
 mlkitGenaiPrompt = "1.0.0-beta5"
 mlkitGenaiSchemaCompiler = "1.0.0-alpha2"
 junit = "4.13.2"
+androidxTestRunner = "1.7.0"
+androidxTestExtJunit = "1.3.0"
 robolectric = "4.17"
 roborazzi = "1.77.0"
 detekt = "1.23.8"
@@ -44,6 +46,8 @@ kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
 mlkit-genai-prompt = { group = "com.google.mlkit", name = "genai-prompt", version.ref = "mlkitGenaiPrompt" }
 mlkit-genai-schema-compiler = { group = "com.google.mlkit", name = "genai-schema-compiler", version.ref = "mlkitGenaiSchemaCompiler" }
+androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "androidxTestRunner" }
+androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxTestExtJunit" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 roborazzi = { group = "io.github.takahirom.roborazzi", name = "roborazzi", version.ref = "roborazzi" }

@@ -10,3 +10,9 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+
+# ML Kit's structured output parses the model's JSON into these classes by reflection and builds their schema
+# from the generated GenerableProvider classes. Without the rules R8 renames the members and parsing fails.
+-keep class com.victorarana.leo.data.genai.GeneratedExercise { *; }
+-keep class com.victorarana.leo.data.genai.TopicReview { *; }
+-keep class * implements com.google.mlkit.genai.schema.guided.GenerableProvider { *; }
