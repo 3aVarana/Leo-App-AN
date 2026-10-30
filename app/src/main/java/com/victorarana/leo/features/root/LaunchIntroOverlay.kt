@@ -112,18 +112,23 @@ fun LaunchIntroHost(
     val currentIsReady by rememberUpdatedState(isReady)
     val currentReduceMotion by rememberUpdatedState(reduceMotion)
 
-    val reported = target.frame
-    LaunchedEffect(reported) {
-        when (phase) {
-            Phase.Launch -> headerFrame = reported
-            Phase.Playing -> {
-                val first = headerFrame
-                val elapsed = (System.nanoTime() - moveBeganNanos) / MILLIS.toDouble() / MILLIS / MILLIS
-                if (exit == Exit.Move && movedWhileComparable(first, reported, elapsed)) {
-                    headerMoved = true
+    // The header's frame is read here only while the intro runs: once it is done, a header that moves (scrolling)
+    // recomposes nothing in the host.
+    LaunchedEffect(phase.isRunning) {
+        if (!phase.isRunning) return@LaunchedEffect
+        snapshotFlow { target.frame }.collect { reported ->
+            when (phase) {
+                Phase.Launch -> headerFrame = reported
+                Phase.Playing -> {
+                    val first = headerFrame
+                    val elapsed = (System.nanoTime() - moveBeganNanos) / MILLIS.toDouble() / MILLIS / MILLIS
+                    val moves =
+                        LaunchIntro.exit(currentReduceMotion, hasTarget = first != null, headerMoved = headerMoved) ==
+                            Exit.Move
+                    if (moves && movedWhileComparable(first, reported, elapsed)) headerMoved = true
                 }
+                Phase.Done -> Unit
             }
-            Phase.Done -> Unit
         }
     }
 

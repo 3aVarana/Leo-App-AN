@@ -226,7 +226,7 @@ class RootViewModelTests {
             assertEquals(listOf(preferences), repository.saved)
         }
 
-    /** A resume while the previous resume is still waiting on a download starts no second check. */
+    /** A resume while the previous resume's check is still waiting on AICore starts no second check. */
     @Test
     fun resumeWhileTheLastResumeWaitsStartsNoSecondCheck() =
         runTest {
@@ -243,6 +243,33 @@ class RootViewModelTests {
             root.onResume()
             advanceUntilIdle()
             assertEquals(3, slow.refreshCount)
+        }
+
+    /** A resume while the previous resume waits on a running download starts no second check. */
+    @Test
+    fun resumeWhileTheLastResumeWaitsOnADownloadStartsNoSecondCheck() =
+        runTest {
+            val gate = CompletableDeferred<Unit>()
+            val downloading =
+                StubModelAvailabilityProvider(availability = ModelAvailability.Downloadable, downloadGate = gate)
+            val root = RootViewModel(repository, downloading)
+            runCurrent()
+            assertEquals(1, downloading.downloadCount)
+
+            root.onResume()
+            runCurrent()
+            assertEquals(2, downloading.refreshCount)
+            assertEquals(2, downloading.downloadCount)
+
+            root.onResume()
+            runCurrent()
+            assertEquals(2, downloading.refreshCount)
+
+            gate.complete(Unit)
+            advanceUntilIdle()
+            root.onResume()
+            advanceUntilIdle()
+            assertEquals(3, downloading.refreshCount)
         }
 
     @Test

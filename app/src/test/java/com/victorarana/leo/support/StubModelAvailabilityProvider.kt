@@ -13,6 +13,8 @@ class StubModelAvailabilityProvider(
     private val refreshGate: CompletableDeferred<Unit>? = null,
     /** What the late answer says: set into [availability] when the gate opens. */
     private val refreshResult: ModelAvailability? = null,
+    /** When set, [download] waits for it, like a download that takes its time. */
+    private val downloadGate: CompletableDeferred<Unit>? = null,
 ) : ModelAvailabilityProvider {
     private val state = MutableStateFlow(availability)
     override val availability: StateFlow<ModelAvailability> get() = state
@@ -34,5 +36,6 @@ class StubModelAvailabilityProvider(
 
     override suspend fun download() {
         downloadCount++
+        downloadGate?.await()
     }
 }
