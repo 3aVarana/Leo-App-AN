@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.DropdownMenu
@@ -91,7 +92,7 @@ private fun Segments(
                 Segment(group, group == selection) { onSelect(group) }
             }
         },
-        modifier = Modifier.clip(ControlShape).border(1.dp, colors.divider, ControlShape),
+        modifier = Modifier.selectableGroup().clip(ControlShape).border(1.dp, colors.divider, ControlShape),
     ) { all, constraints ->
         val divider = 1.dp.roundToPx()
         val dividers = all.filterIndexed { index, _ -> index % 2 == 1 }
@@ -100,13 +101,16 @@ private fun Segments(
         val gaps = divider * dividers.size
         val available = if (constraints.hasBoundedWidth) constraints.maxWidth - gaps else naturals.sum()
         val share = available / segments.size
-        val widths =
+        val divided =
             if (naturals.all { it <= share }) {
                 List(segments.size) { share }
             } else {
                 val extra = (available - naturals.sum()).coerceAtLeast(0) / segments.size
                 naturals.map { it + extra }
             }
+        // The pixels the integer division leaves go to the last segment, so the control spans the whole row.
+        val leftover = (available - divided.sum()).coerceAtLeast(0)
+        val widths = divided.mapIndexed { index, width -> if (index == divided.lastIndex) width + leftover else width }
         val height = segments.zip(widths).maxOf { (m, w) -> m.minIntrinsicHeight(w) }
         val segmentPlaceables = segments.zip(widths).map { (m, w) -> m.measure(Constraints.fixed(w, height)) }
         val dividerPlaceables = dividers.map { it.measure(Constraints.fixed(divider, height)) }
