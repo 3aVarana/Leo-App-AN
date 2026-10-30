@@ -3,9 +3,12 @@ package com.victorarana.leo.data.genai
 import com.google.mlkit.genai.common.FeatureStatus
 import com.victorarana.leo.domain.ModelAvailability
 import com.victorarana.leo.domain.ModelUnavailableReason
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -111,6 +114,54 @@ class GenAiModelAvailabilityProviderTests {
                 ModelAvailability.Unavailable(ModelUnavailableReason.DOWNLOAD_FAILED),
                 provider.availability.value,
             )
+        }
+
+    @Test
+    fun failedDownloadStaysFailed() =
+        runTest {
+            val events =
+                flowOf(
+                    ModelDownloadEvent.Started(bytesToDownload = 100),
+                    ModelDownloadEvent.Failed(IllegalStateException("network")),
+                    ModelDownloadEvent.Progress(bytesDownloaded = 50),
+                )
+            val source = FakeSource(status = { FeatureStatus.AVAILABLE }, events = { events })
+            val provider = GenAiModelAvailabilityProvider(source)
+
+            provider.download()
+
+            assertEquals(
+                ModelAvailability.Unavailable(ModelUnavailableReason.DOWNLOAD_FAILED),
+                provider.availability.value,
+            )
+        }
+
+    @Test
+    fun secondDownloadWhileOneRunsDoesNotStartAnother() =
+        runTest {
+            val gate = CompletableDeferred<Unit>()
+            val source =
+                FakeSource(
+                    events = {
+                        flow {
+                            emit(ModelDownloadEvent.Started(bytesToDownload = 100))
+                            emit(ModelDownloadEvent.Progress(bytesDownloaded = 50))
+                            gate.await()
+                            emit(ModelDownloadEvent.Completed)
+                        }
+                    },
+                )
+            val provider = GenAiModelAvailabilityProvider(source)
+
+            val first = launch { provider.download() }
+            advanceUntilIdle()
+            provider.download()
+
+            assertEquals(1, source.downloads)
+            assertEquals(ModelAvailability.Downloading(0.5f), provider.availability.value)
+            gate.complete(Unit)
+            first.join()
+            assertEquals(ModelAvailability.Available, provider.availability.value)
         }
 
     @Test

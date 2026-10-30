@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.transformWhile
+import kotlinx.coroutines.sync.Mutex
 
 /** What AICore reports while it downloads the model, without ML Kit types, so the provider can be tested. */
 sealed interface ModelDownloadEvent {
@@ -65,6 +67,7 @@ class GenAiModelAvailabilityProvider(
     // Until the first check the screen shows an indeterminate "getting ready" state rather than an error.
     private val state = MutableStateFlow<ModelAvailability>(ModelAvailability.Downloading(fraction = null))
     override val availability: StateFlow<ModelAvailability> = state.asStateFlow()
+    private val downloading = Mutex()
 
     override suspend fun refresh() {
         state.value =
@@ -82,25 +85,41 @@ class GenAiModelAvailabilityProvider(
     }
 
     override suspend fun download() {
+        // A second prepare() while this one is still collecting would restart the progress; the first one reports.
+        if (!downloading.tryLock()) return
+        try {
+            collectDownload()
+        } finally {
+            downloading.unlock()
+        }
+    }
+
+    private suspend fun collectDownload() {
         state.value = ModelAvailability.Downloading(fraction = null)
         var total = 0L
         try {
-            source.download().collect { event ->
-                when (event) {
-                    is ModelDownloadEvent.Started -> {
-                        total = event.bytesToDownload
-                        state.value = ModelAvailability.Downloading(fraction = if (total > 0) 0f else null)
-                    }
-                    is ModelDownloadEvent.Progress ->
-                        if (total > 0) {
-                            val fraction = event.bytesDownloaded.toFloat() / total
-                            state.value = ModelAvailability.Downloading(fraction.coerceIn(0f, 1f))
+            // A failure is final: nothing AICore sends after it may show progress again.
+            source
+                .download()
+                .transformWhile { event ->
+                    emit(event)
+                    event !is ModelDownloadEvent.Failed
+                }.collect { event ->
+                    when (event) {
+                        is ModelDownloadEvent.Started -> {
+                            total = event.bytesToDownload
+                            state.value = ModelAvailability.Downloading(fraction = if (total > 0) 0f else null)
                         }
-                    // Read again below, once the flow has ended.
-                    ModelDownloadEvent.Completed -> Unit
-                    is ModelDownloadEvent.Failed -> fail(event.cause)
+                        is ModelDownloadEvent.Progress ->
+                            if (total > 0) {
+                                val fraction = event.bytesDownloaded.toFloat() / total
+                                state.value = ModelAvailability.Downloading(fraction.coerceIn(0f, 1f))
+                            }
+                        // Read again below, once the flow has ended.
+                        ModelDownloadEvent.Completed -> Unit
+                        is ModelDownloadEvent.Failed -> fail(event.cause)
+                    }
                 }
-            }
             // Whatever the flow ended with, AICore has the last word.
             if (state.value !is ModelAvailability.Unavailable) refresh()
         } catch (cancelled: CancellationException) {

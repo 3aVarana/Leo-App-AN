@@ -71,3 +71,9 @@ Fixed:
 Nits: done N2 (system-prompt feature read once per instance), N4 (live test trims whitespace and punctuation like iOS), N5 (unused androidTest coroutines-test dropped), N6 (passage regex hoisted), N7 (`trimEnd/trimStart` of spaces and tabs only), N8 (`scripted` ignores empty pieces). Skipped: N1 (one shared `GenerativeModel` and no `shared` defaults belong to the phase 4 `AppContainer`), N3 (noted: `com.google.mlkit` only in `data/genai/` holds by convention, since detekt `ForbiddenImport` covers only `features/`), N9 (information; re-check APK size after R8 in phase 4). Not a code fix, for the user: phase 9 should measure the share of attempts lost to `complete == null` (unescaped quotes in dialogue) against typed, non-streamed generation.
 
 Commands: `./gradlew ktlintFormat assembleDebug assembleRelease assembleDebugAndroidTest :domain:test testDebugUnitTest detekt ktlintCheck lintDebug --console=plain` -> BUILD SUCCESSFUL on Kotlin 2.4.0 (0 test failures).
+
+## PR review follow-up (Claude review on PR #8)
+
+- `TopicValidator.review` calls `ensureActive()` before mapping `ModelRefusedException` to the generic rejection, so a cancelled caller is not answered with "rejected". Test `cancelledCallerIsNotReportedAsARefusal`.
+- `GenAiModelAvailabilityProvider.download()`: a `Failed` event ends collection (`transformWhile`), and a `Mutex` makes a second `download()`/`prepare()` while one is collecting return instead of starting another. Tests `failedDownloadStaysFailed`, `secondDownloadWhileOneRunsDoesNotStartAnother`.
+- Not changed: `PartialJson.append`'s delta-or-replay guess stays until a device shows which one ML Kit sends (qa.md).

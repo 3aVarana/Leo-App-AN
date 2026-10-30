@@ -4,8 +4,12 @@ import com.victorarana.leo.R
 import com.victorarana.leo.domain.AgeGroup
 import com.victorarana.leo.domain.TopicReviewOutcome
 import com.victorarana.leo.support.FakeLanguageModel
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -94,6 +98,31 @@ class TopicValidatorTests {
             val outcome = TopicValidator(ContentLanguage.english, model).review("x", AgeGroup.SIX, genericRejection)
 
             assertEquals(TopicReviewOutcome.Rejected(genericRejection), outcome)
+        }
+
+    @Test
+    fun cancelledCallerIsNotReportedAsARefusal() =
+        runTest {
+            // ML Kit may surface a cancelled call with the error code that maps to ModelRefusedException.
+            var outcome: TopicReviewOutcome? = null
+
+            val job =
+                launch {
+                    val scope = coroutineContext
+                    val model =
+                        FakeLanguageModel(
+                            reviews =
+                                listOf({
+                                    scope.cancel()
+                                    throw ModelRefusedException()
+                                }),
+                        )
+                    outcome = TopicValidator(ContentLanguage.english, model).review("x", AgeGroup.SIX, genericRejection)
+                }
+            advanceUntilIdle()
+
+            assertTrue(job.isCancelled)
+            assertNull(outcome)
         }
 
     @Test

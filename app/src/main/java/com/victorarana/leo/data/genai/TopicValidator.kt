@@ -2,6 +2,8 @@ package com.victorarana.leo.data.genai
 
 import com.victorarana.leo.domain.AgeGroup
 import com.victorarana.leo.domain.TopicReviewOutcome
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 
 /** Checks with the on-device model that a custom topic suits the reader, and tidies up its wording. */
 class TopicValidator internal constructor(
@@ -37,6 +39,8 @@ class TopicValidator internal constructor(
                 )
             outcome(review, genericRejection)
         } catch (_: ModelRefusedException) {
+            // The refusal code may also be how ML Kit reports a cancelled call; cancellation wins.
+            currentCoroutineContext().ensureActive()
             TopicReviewOutcome.Rejected(genericRejection)
         }
     }
