@@ -33,9 +33,26 @@ val LocalReduceMotion = compositionLocalOf<Boolean?> { null }
 fun isReduceMotion(context: Context): Boolean =
     Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
 
-/** [isReduceMotion], kept up to date while the screen is shown, unless [LocalReduceMotion] overrides it. */
+/**
+ * Whether to reduce motion: [LocalReduceMotion], which [LeoTheme] provides from one system observer for the whole
+ * tree, or (outside a [LeoTheme]) the system setting observed here.
+ */
 @Composable
-fun rememberReduceMotion(): Boolean {
+fun rememberReduceMotion(): Boolean = LocalReduceMotion.current ?: rememberSystemReduceMotion()
+
+/** Provides the system setting as [LocalReduceMotion], unless an outer provider (a test) already set it. */
+@Composable
+internal fun ProvideReduceMotion(content: @Composable () -> Unit) {
+    if (LocalReduceMotion.current != null) {
+        content()
+    } else {
+        CompositionLocalProvider(LocalReduceMotion provides rememberSystemReduceMotion(), content = content)
+    }
+}
+
+/** [isReduceMotion], kept up to date while the screen is shown. */
+@Composable
+private fun rememberSystemReduceMotion(): Boolean {
     val context = LocalContext.current
     var system by remember(context) { mutableStateOf(isReduceMotion(context)) }
     DisposableEffect(context) {
@@ -50,7 +67,7 @@ fun rememberReduceMotion(): Boolean {
         system = isReduceMotion(context)
         onDispose { context.contentResolver.unregisterContentObserver(observer) }
     }
-    return LocalReduceMotion.current ?: system
+    return system
 }
 
 /**

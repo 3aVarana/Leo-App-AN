@@ -107,8 +107,7 @@ fun UnavailableScreen(
             size = 40.dp.scaled(relativeTo = 34f),
             modifier =
                 Modifier
-                    .clearAndSetSemantics {
-                    },
+                    .clearAndSetSemantics {},
         )
         Kicker(text = stringResource(R.string.app_name), modifier = Modifier.padding(top = 16.dp))
         BasicText(
