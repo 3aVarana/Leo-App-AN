@@ -87,7 +87,7 @@ class RootViewModel(
     /**
      * Asks AICore again when the app comes back to the foreground, and starts the download if the model has become
      * downloadable meanwhile (after a failed download, or a device that was not ready). While a download runs,
-     * `download()` returns at once.
+     * `download()` starts no other one but suspends until it ends, so this coroutine stays alive until then.
      */
     fun onResume() {
         viewModelScope.launch {
