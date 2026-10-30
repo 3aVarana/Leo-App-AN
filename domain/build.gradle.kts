@@ -1,5 +1,7 @@
 plugins {
+    `java-test-fixtures`
     alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ktlint)
     alias(libs.plugins.detekt)
 }
@@ -15,6 +17,7 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 dependencies {
+    api(libs.kotlinx.serialization.json)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
 }
