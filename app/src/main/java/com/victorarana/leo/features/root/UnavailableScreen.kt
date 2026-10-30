@@ -56,7 +56,7 @@ private data class UnavailableCopy(
     @param:StringRes val detail: Int? = null,
 )
 
-private fun ModelAvailability.copy(): UnavailableCopy? =
+private fun ModelAvailability.unavailableCopy(): UnavailableCopy? =
     when (this) {
         ModelAvailability.Available -> null
         ModelAvailability.Downloadable, is ModelAvailability.Downloading ->
@@ -87,7 +87,7 @@ fun UnavailableScreen(
     availability: ModelAvailability,
     modifier: Modifier = Modifier,
 ) {
-    val copy = availability.copy() ?: return
+    val copy = availability.unavailableCopy() ?: return
     val colors = LeoTheme.colors
     ScrollingScreen(modifier) {
         TopOffset(height = 140.dp)
@@ -130,6 +130,7 @@ fun UnavailableScreen(
 private fun DownloadProgress(fraction: Float?) {
     val colors = LeoTheme.colors
     val description = stringResource(R.string.unavailable_download_progress)
+    val percent = fraction?.let { NumberFormat.getPercentInstance().format(it.toDouble()) }
     Column(
         modifier =
             Modifier
@@ -138,7 +139,7 @@ private fun DownloadProgress(fraction: Float?) {
                     contentDescription = description
                     if (fraction != null) {
                         progressBarRangeInfo = ProgressBarRangeInfo(fraction, 0f..1f)
-                        stateDescription = NumberFormat.getPercentInstance().format(fraction.toDouble())
+                        stateDescription = percent.orEmpty()
                     } else {
                         progressBarRangeInfo = ProgressBarRangeInfo.Indeterminate
                     }
@@ -164,9 +165,9 @@ private fun DownloadProgress(fraction: Float?) {
                 )
             }
         }
-        if (fraction != null) {
+        if (percent != null) {
             BasicText(
-                text = NumberFormat.getPercentInstance().format(fraction.toDouble()),
+                text = percent,
                 modifier = Modifier.clearAndSetSemantics {},
                 style = LeoTextStyle.caption.toTextStyle().copy(color = colors.inkMuted),
             )

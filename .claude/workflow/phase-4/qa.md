@@ -52,3 +52,7 @@ Other checks:
 
 - Criterion 1 caveat closed: `strings` on the dex in `app/build/outputs/apk/release/app-release-unsigned.apk` shows `Lcom/victorarana/leo/data/genai/GeneratedExercise;` and `Lcom/victorarana/leo/data/genai/TopicReview;` with their original names. PASS.
 - Criterion 9: `changes.md` has an entry for each of D1-D7 and Q1-Q8; `docs/learning/phase-4.md` is written (one page). PASS.
+
+## Device check added after PR review
+
+- During a long first download, `onResume()` doesn't ask AICore again until the launch job (check + download) ends. Check on a device that turning AICore off mid-download shows the right state once the download ends, and that the progress keeps updating meanwhile.
