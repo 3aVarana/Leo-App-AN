@@ -59,26 +59,35 @@ roborazzi {
 }
 
 // Privacy promise: no INTERNET permission may survive manifest merging, in any variant.
+// Wired as a transform of the merged manifest, so everything downstream of it (packaging, assemble<Variant>) runs it.
 abstract class VerifyNoInternetPermission : DefaultTask() {
     @get:InputFile
     abstract val mergedManifest: RegularFileProperty
 
+    @get:OutputFile
+    abstract val verifiedManifest: RegularFileProperty
+
     @TaskAction
     fun verify() {
         val manifest = mergedManifest.get().asFile
-        check(!manifest.readText().contains("android.permission.INTERNET")) {
+        // Match the element (uses-permission or uses-permission-sdk-23), not any mention such as a comment.
+        val internetPermission =
+            Regex("""<uses-permission(-sdk-23)?\s[^>]*android:name="android\.permission\.INTERNET"""")
+        check(!internetPermission.containsMatchIn(manifest.readText())) {
             "Merged manifest ${manifest.path} declares android.permission.INTERNET, Leo must not."
         }
+        manifest.copyTo(verifiedManifest.get().asFile, overwrite = true)
     }
 }
 
 androidComponents {
     onVariants { variant ->
         val taskName = "verify${variant.name.replaceFirstChar { it.uppercase() }}NoInternetPermission"
-        val verify =
-            tasks.register<VerifyNoInternetPermission>(taskName) {
-                mergedManifest.set(variant.artifacts.get(com.android.build.api.artifact.SingleArtifact.MERGED_MANIFEST))
-            }
+        val verify = tasks.register<VerifyNoInternetPermission>(taskName)
+        variant.artifacts
+            .use(verify)
+            .wiredWithFiles(VerifyNoInternetPermission::mergedManifest, VerifyNoInternetPermission::verifiedManifest)
+            .toTransform(com.android.build.api.artifact.SingleArtifact.MERGED_MANIFEST)
         tasks.named("check") { dependsOn(verify) }
     }
 }
