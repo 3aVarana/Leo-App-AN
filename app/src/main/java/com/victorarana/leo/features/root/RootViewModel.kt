@@ -84,9 +84,16 @@ class RootViewModel(
         }
     }
 
-    /** Asks AICore again when the app comes back to the foreground. */
+    /**
+     * Asks AICore again when the app comes back to the foreground, and starts the download if the model has become
+     * downloadable meanwhile (after a failed download, or a device that was not ready). While a download runs,
+     * `download()` returns at once.
+     */
     fun onResume() {
-        viewModelScope.launch { availabilityProvider.refresh() }
+        viewModelScope.launch {
+            availabilityProvider.refresh()
+            availabilityProvider.downloadIfNeeded()
+        }
     }
 
     /** Saves and applies [newPreferences]. Does nothing when they haven't changed. */

@@ -144,3 +144,10 @@ Round 2, all with `--rerun-tasks`:
 - `./gradlew assembleDebug`: BUILD SUCCESSFUL (42 tasks executed).
 - `./gradlew :domain:test testDebugUnitTest`: BUILD SUCCESSFUL (42 tasks executed; snapshot verify on).
 - `./gradlew detekt ktlintCheck lintDebug`: BUILD SUCCESSFUL (55 tasks executed).
+
+## PR #9 review fixes
+
+- **Launch intro stuck on a cold start (blocking):** `LaunchedEffect(plays)` captured the first `isReady`, so a launch where AICore hadn't answered yet never left the launch frame. It now reads `rememberUpdatedState(isReady)` (`LaunchIntroOverlay.kt`). New `LaunchIntroHostTests.introEndsOnceReadyTurnsTrueAfterTheFirstFrame` fails on the old code and passes now.
+- **Download on resume:** `RootViewModel.onResume()` calls `downloadIfNeeded()` after its refresh, so a model that became downloadable while the app was away (after a failed download, say) is downloaded instead of leaving an indeterminate bar. Tests `downloadsOnResumeWhenTheModelBecameDownloadable`, `resumeDoesNotDownloadAnAvailableModel`.
+- **No state write during composition:** the host sets `target.isHidden` in a `SideEffect`, and the header reads it in `graphicsLayer` (the draw phase), so it is still hidden on the first frame.
+- **Download scope (accepted, not changed):** the download collection runs in `viewModelScope`, so leaving the app from "Getting Leo ready" stops Leo's collection. AICore keeps downloading on its side, and the next launch or resume picks up its progress.

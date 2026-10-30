@@ -192,6 +192,29 @@ class RootViewModelTests {
             assertEquals(2, availability.refreshCount)
         }
 
+    /** A model that became downloadable while the app was away (a failed download, say) is downloaded on resume. */
+    @Test
+    fun downloadsOnResumeWhenTheModelBecameDownloadable() =
+        runTest {
+            availability.set(ModelAvailability.Unavailable(ModelUnavailableReason.DOWNLOAD_FAILED))
+            val root = makeRoot()
+            assertEquals(0, availability.downloadCount)
+
+            availability.set(ModelAvailability.Downloadable)
+            root.onResume()
+            advanceUntilIdle()
+            assertEquals(1, availability.downloadCount)
+        }
+
+    @Test
+    fun resumeDoesNotDownloadAnAvailableModel() =
+        runTest {
+            val root = makeRoot()
+            root.onResume()
+            advanceUntilIdle()
+            assertEquals(0, availability.downloadCount)
+        }
+
     @Test
     fun onboardingDraftIsFifteen() {
         assertEquals(AgeGroup.FIFTEEN, RootViewModel.onboardingDraft.ageGroup)

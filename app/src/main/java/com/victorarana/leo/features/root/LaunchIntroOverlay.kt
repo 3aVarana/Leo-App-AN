@@ -10,17 +10,18 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.graphicsLayer
@@ -64,7 +65,9 @@ val LocalLaunchWordmarkTarget = staticCompositionLocalOf<LaunchWordmarkTarget?> 
 @Composable
 fun Modifier.launchWordmarkTarget(): Modifier {
     val target = LocalLaunchWordmarkTarget.current ?: return this
-    return alpha(if (target.isHidden) 0f else 1f).onGloballyPositioned { target.frame = it.boundsInWindow() }
+    // Read while drawing, not composing: the host sets `isHidden` after composition, before the frame is drawn.
+    return graphicsLayer { alpha = if (target.isHidden) 0f else 1f }
+        .onGloballyPositioned { target.frame = it.boundsInWindow() }
 }
 
 /**
@@ -104,7 +107,9 @@ fun LaunchIntroHost(
         }
 
     val exit = LaunchIntro.exit(reduceMotion, hasTarget = headerFrame != null, headerMoved = headerMoved)
-    target.isHidden = LaunchIntro.hidesHeader(phase, exit)
+    SideEffect { target.isHidden = LaunchIntro.hidesHeader(phase, exit) }
+    // The effect below outlives recompositions; it must see the latest value, not the first one.
+    val currentIsReady by rememberUpdatedState(isReady)
 
     val reported = target.frame
     LaunchedEffect(reported) {
@@ -126,7 +131,7 @@ fun LaunchIntroHost(
         LaunchIntro.hasPlayed = true
         if (phase == Phase.Launch) {
             delay(seconds(LaunchIntro.Timing.HOLD))
-            snapshotFlow { isReady }.first { it }
+            snapshotFlow { currentIsReady }.first { it }
             moveBeganNanos = System.nanoTime()
             phase = Phase.Playing
         }
