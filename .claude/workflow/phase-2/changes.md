@@ -77,3 +77,4 @@ Final run after the review follow-up: `./gradlew ktlintFormat`, then `./gradlew 
 - KDoc of `RoomRoundHistoryRepository`: the in-memory fallback covers failures at open only; corruption found later makes calls throw for that launch.
 - Test-only members shipping in release: kept on purpose (noted by the review as harmless).
 - `./gradlew assembleDebug :domain:test testDebugUnitTest detekt ktlintCheck lintDebug`: BUILD SUCCESSFUL (RoomRoundHistoryRepositoryTests 15, RoundHistorySchemaTests 3, 0 failures).
+- Second PR review: `DataStorePreferencesRepository.create` now keeps `applicationContext` in `produceFile` (no Activity leak). The fallback log already includes the exception class (`$error` prints e.g. `java.lang.IllegalStateException: …`), and the message text stays the iOS one, so no change there. Build, tests and lint: BUILD SUCCESSFUL.

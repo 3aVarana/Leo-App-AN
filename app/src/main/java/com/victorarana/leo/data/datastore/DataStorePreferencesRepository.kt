@@ -71,13 +71,16 @@ class DataStorePreferencesRepository(
         fun create(
             context: Context,
             ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-        ): DataStorePreferencesRepository =
-            DataStorePreferencesRepository(
+        ): DataStorePreferencesRepository {
+            // The DataStore keeps produceFile for the whole process: never hold an Activity.
+            val appContext = context.applicationContext
+            return DataStorePreferencesRepository(
                 dataStore(
                     scope = CoroutineScope(ioDispatcher + SupervisorJob()),
-                    produceFile = { context.preferencesDataStoreFile(FILE_NAME) },
+                    produceFile = { appContext.preferencesDataStoreFile(FILE_NAME) },
                 ),
             )
+        }
 
         /** The DataStore [create] uses, with its corruption handler. Internal so tests build the same one. */
         internal fun dataStore(
