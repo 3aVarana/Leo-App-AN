@@ -7,12 +7,15 @@ import com.victorarana.leo.data.repositories.PreferencesRepository
 import com.victorarana.leo.domain.AgeGroup
 import com.victorarana.leo.domain.ModelAvailability
 import com.victorarana.leo.domain.ReaderPreferences
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
@@ -51,6 +54,10 @@ class RootViewModel(
 ) : ViewModel() {
     private val preferences = MutableStateFlow<PreferencesState>(PreferencesState.Loading)
     private val availabilityChecked = MutableStateFlow(false)
+    private var resumeCheck: Job? = null
+
+    // Saves run one at a time, so a quick second save of the same preferences sees the first one's result.
+    private val saving = Mutex()
 
     /** [availability] is combined, never copied, so the screen swaps as soon as the model becomes available. */
     val uiState: StateFlow<RootUiState> =
@@ -87,21 +94,27 @@ class RootViewModel(
     /**
      * Asks AICore again when the app comes back to the foreground, and starts the download if the model has become
      * downloadable meanwhile (after a failed download, or a device that was not ready). While a download runs,
-     * `download()` starts no other one but suspends until it ends, so this coroutine stays alive until then.
+     * `download()` starts no other one but suspends until it ends; a resume meanwhile (a rotation, say) starts no
+     * second check while the first is still waiting.
      */
     fun onResume() {
-        viewModelScope.launch {
-            availabilityProvider.refresh()
-            availabilityProvider.downloadIfNeeded()
-        }
+        if (resumeCheck?.isActive == true) return
+        resumeCheck =
+            viewModelScope.launch {
+                availabilityProvider.refresh()
+                availabilityProvider.downloadIfNeeded()
+            }
     }
 
     /** Saves and applies [newPreferences]. Does nothing when they haven't changed. */
     fun save(newPreferences: ReaderPreferences) {
         if ((preferences.value as? PreferencesState.Ready)?.preferences == newPreferences) return
         viewModelScope.launch {
-            preferencesRepository.save(newPreferences)
-            preferences.value = PreferencesState.Ready(newPreferences)
+            saving.withLock {
+                if ((preferences.value as? PreferencesState.Ready)?.preferences == newPreferences) return@withLock
+                preferencesRepository.save(newPreferences)
+                preferences.value = PreferencesState.Ready(newPreferences)
+            }
         }
     }
 

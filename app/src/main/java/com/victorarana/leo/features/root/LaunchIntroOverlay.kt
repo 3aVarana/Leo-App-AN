@@ -110,6 +110,7 @@ fun LaunchIntroHost(
     SideEffect { target.isHidden = LaunchIntro.hidesHeader(phase, exit) }
     // The effect below outlives recompositions; it must see the latest value, not the first one.
     val currentIsReady by rememberUpdatedState(isReady)
+    val currentReduceMotion by rememberUpdatedState(reduceMotion)
 
     val reported = target.frame
     LaunchedEffect(reported) {
@@ -134,7 +135,9 @@ fun LaunchIntroHost(
             moveBeganNanos = System.nanoTime()
             phase = Phase.Playing
         }
-        delay(seconds(if (reduceMotion) LaunchIntro.Timing.REDUCED_MOTION_FADE else LaunchIntro.Timing.PLAYING))
+        delay(
+            seconds(if (currentReduceMotion) LaunchIntro.Timing.REDUCED_MOTION_FADE else LaunchIntro.Timing.PLAYING),
+        )
         // Only now: an Activity recreated during the hold must wait for `isReady` again, not skip to the page.
         LaunchIntro.hasPlayed = true
         phase = Phase.Done

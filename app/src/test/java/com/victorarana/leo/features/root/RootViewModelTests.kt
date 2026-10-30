@@ -215,6 +215,36 @@ class RootViewModelTests {
             assertEquals(0, availability.downloadCount)
         }
 
+    /** Android only: two quick saves of the same preferences persist once (iOS saves synchronously). */
+    @Test
+    fun twoQuickEqualSavesPersistOnce() =
+        runTest {
+            val root = makeRoot()
+            root.save(preferences)
+            root.save(preferences)
+            advanceUntilIdle()
+            assertEquals(listOf(preferences), repository.saved)
+        }
+
+    /** A resume while the previous resume is still waiting on a download starts no second check. */
+    @Test
+    fun resumeWhileTheLastResumeWaitsStartsNoSecondCheck() =
+        runTest {
+            val gate = CompletableDeferred<Unit>()
+            val slow = StubModelAvailabilityProvider(refreshGate = gate)
+            val root = RootViewModel(repository, slow)
+            runCurrent()
+            root.onResume()
+            root.onResume()
+            runCurrent()
+            assertEquals(2, slow.refreshCount)
+            gate.complete(Unit)
+            advanceUntilIdle()
+            root.onResume()
+            advanceUntilIdle()
+            assertEquals(3, slow.refreshCount)
+        }
+
     @Test
     fun onboardingDraftIsFifteen() {
         assertEquals(AgeGroup.FIFTEEN, RootViewModel.onboardingDraft.ageGroup)
