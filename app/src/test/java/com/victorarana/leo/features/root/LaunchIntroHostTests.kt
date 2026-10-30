@@ -9,6 +9,8 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import com.victorarana.leo.features.theme.LeoTheme
 import org.junit.After
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -49,6 +51,25 @@ class LaunchIntroHostTests {
         composeRule.mainClock.advanceTimeBy(INTRO_AND_MORE_MILLIS)
         composeRule.waitForIdle()
         composeRule.onNodeWithText("Page").assertExists()
+    }
+
+    /** A recreation during the hold must replay the intro (and wait for `isReady`), not skip to the page. */
+    @Test
+    fun introCountsAsPlayedOnlyOnceItFinishes() {
+        var isReady by mutableStateOf(false)
+        composeRule.setContent {
+            LeoTheme {
+                LaunchIntroHost(isReady = isReady) { BasicText("Page") }
+            }
+        }
+        composeRule.mainClock.advanceTimeBy(HOLD_AND_MORE_MILLIS)
+        assertFalse(LaunchIntro.hasPlayed)
+
+        isReady = true
+        composeRule.waitForIdle()
+        composeRule.mainClock.advanceTimeBy(INTRO_AND_MORE_MILLIS)
+        composeRule.waitForIdle()
+        assertTrue(LaunchIntro.hasPlayed)
     }
 
     private companion object {

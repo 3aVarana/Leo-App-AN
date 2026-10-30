@@ -18,8 +18,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -159,7 +159,7 @@ private fun DownloadProgress(fraction: Float?) {
                     Modifier
                         .fillMaxHeight()
                         .fillMaxWidth()
-                        .alpha(pulseAlpha())
+                        .pulsing()
                         .background(colors.accent),
                 )
             }
@@ -174,15 +174,19 @@ private fun DownloadProgress(fraction: Float?) {
     }
 }
 
-/** Pulses like [com.victorarana.leo.features.components.SkeletonLines]: still under reduced motion or in snapshots. */
+/**
+ * Pulses like [com.victorarana.leo.features.components.SkeletonLines]: still under reduced motion or in snapshots.
+ * The value is read in `graphicsLayer`, so the pulse redraws the bar without recomposing it.
+ */
 @Composable
-private fun pulseAlpha(): Float {
-    if (rememberReduceMotion() || !LocalAnimatesPlaceholders.current) return STATIC_ALPHA
-    return rememberInfiniteTransition(label = "download")
-        .animateFloat(
+private fun Modifier.pulsing(): Modifier {
+    if (rememberReduceMotion() || !LocalAnimatesPlaceholders.current) return graphicsLayer { alpha = STATIC_ALPHA }
+    val pulse =
+        rememberInfiniteTransition(label = "download").animateFloat(
             initialValue = 1f,
             targetValue = PULSE_LOW_ALPHA,
             animationSpec = infiniteRepeatable(tween(PULSE_MILLIS), RepeatMode.Reverse),
             label = "pulse",
-        ).value
+        )
+    return graphicsLayer { alpha = pulse.value }
 }

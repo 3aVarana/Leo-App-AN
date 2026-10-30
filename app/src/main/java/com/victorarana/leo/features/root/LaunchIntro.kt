@@ -14,8 +14,9 @@ private const val HEADER_TOLERANCE = 0.5f
 
 object LaunchIntro {
     /**
-     * Set once the intro has started, so it plays on cold launch only. Process-wide, so recreating the Activity
-     * (rotation, dark mode) doesn't play it again.
+     * Set once the intro has finished, so it plays on cold launch only. Process-wide, so recreating the Activity
+     * (rotation, dark mode) afterwards doesn't play it again; a recreation mid-intro plays it again from the launch
+     * frame, which still waits for the first screen to be known.
      */
     @Volatile
     var hasPlayed = false

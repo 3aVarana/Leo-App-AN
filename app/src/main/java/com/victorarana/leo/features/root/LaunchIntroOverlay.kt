@@ -128,7 +128,6 @@ fun LaunchIntroHost(
 
     LaunchedEffect(plays) {
         if (!plays || phase == Phase.Done) return@LaunchedEffect
-        LaunchIntro.hasPlayed = true
         if (phase == Phase.Launch) {
             delay(seconds(LaunchIntro.Timing.HOLD))
             snapshotFlow { currentIsReady }.first { it }
@@ -136,6 +135,8 @@ fun LaunchIntroHost(
             phase = Phase.Playing
         }
         delay(seconds(if (reduceMotion) LaunchIntro.Timing.REDUCED_MOTION_FADE else LaunchIntro.Timing.PLAYING))
+        // Only now: an Activity recreated during the hold must wait for `isReady` again, not skip to the page.
+        LaunchIntro.hasPlayed = true
         phase = Phase.Done
     }
 
