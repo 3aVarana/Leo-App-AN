@@ -96,4 +96,6 @@
     <string name="topic_travel_and_geography">Travel and geography</string>
     <string name="topic_the_history_of_language">The history of language</string>
     <string name="topic_art_movements">Art movements</string>
+    <string name="exercise_generation_failed">We couldn\'t create this exercise. Please try again.</string>
+    <string name="topic_review_generic_rejection">That topic isn\'t a good fit for your reading practice. Try another one.</string>
 </resources>
