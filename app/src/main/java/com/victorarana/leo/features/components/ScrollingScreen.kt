@@ -107,7 +107,7 @@ private val SpacerColumnScope: ScrollingScope =
     }
 
 /** What a child tells [SpacerColumn]: its flexible share and cap, and where it sits across. */
-private data class ScrollingChildData(
+internal data class ScrollingChildData(
     val weight: Float = 0f,
     val min: Dp = 0.dp,
     val max: Dp = Dp.Infinity,
@@ -167,7 +167,7 @@ private fun SpacerColumn(
 }
 
 /** The water-filling split: heights for [children], in order, from [free] pixels beyond the fixed children. */
-private fun shareHeights(
+internal fun shareHeights(
     free: Int,
     children: List<ScrollingChildData>,
     toPx: (Dp) -> Int,
@@ -189,9 +189,11 @@ private fun shareHeights(
     var left = free - mins.sum()
     while (left > 0 && open.isNotEmpty()) {
         val totalWeight = open.sumOf { children[it].weight.toDouble() }
+        // Every share in a pass comes from the same pool; a child capped in it frees space for the next pass.
+        val pool = left
         var capped = false
         for (index in open.toList()) {
-            val share = (left * children[index].weight / totalWeight).toInt()
+            val share = (pool * children[index].weight / totalWeight).toInt()
             if (sizes[index] + share >= maxes[index]) {
                 left -= maxes[index] - sizes[index]
                 sizes[index] = maxes[index]

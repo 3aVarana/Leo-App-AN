@@ -226,23 +226,22 @@ class RootViewModelTests {
             assertEquals(listOf(preferences), repository.saved)
         }
 
-    /** A resume while the previous resume's check is still waiting on AICore starts no second check. */
+    /** The first ON_RESUME comes right after launch: it must not ask AICore a second time. */
     @Test
-    fun resumeWhileTheLastResumeWaitsStartsNoSecondCheck() =
+    fun resumeDuringTheLaunchCheckStartsNoSecondCheck() =
         runTest {
             val gate = CompletableDeferred<Unit>()
             val slow = StubModelAvailabilityProvider(refreshGate = gate)
             val root = RootViewModel(repository, slow)
-            runCurrent()
-            root.onResume()
             root.onResume()
             runCurrent()
-            assertEquals(2, slow.refreshCount)
+            assertEquals(1, slow.refreshCount)
+
             gate.complete(Unit)
             advanceUntilIdle()
             root.onResume()
             advanceUntilIdle()
-            assertEquals(3, slow.refreshCount)
+            assertEquals(2, slow.refreshCount)
         }
 
     /** A resume while the previous resume waits on a running download starts no second check. */
@@ -250,26 +249,25 @@ class RootViewModelTests {
     fun resumeWhileTheLastResumeWaitsOnADownloadStartsNoSecondCheck() =
         runTest {
             val gate = CompletableDeferred<Unit>()
-            val downloading =
-                StubModelAvailabilityProvider(availability = ModelAvailability.Downloadable, downloadGate = gate)
-            val root = RootViewModel(repository, downloading)
+            val provider = StubModelAvailabilityProvider(downloadGate = gate)
+            val root = RootViewModel(repository, provider)
+            advanceUntilIdle()
+
+            provider.set(ModelAvailability.Downloadable)
+            root.onResume()
             runCurrent()
-            assertEquals(1, downloading.downloadCount)
+            assertEquals(2, provider.refreshCount)
+            assertEquals(1, provider.downloadCount)
 
             root.onResume()
             runCurrent()
-            assertEquals(2, downloading.refreshCount)
-            assertEquals(2, downloading.downloadCount)
-
-            root.onResume()
-            runCurrent()
-            assertEquals(2, downloading.refreshCount)
+            assertEquals(2, provider.refreshCount)
 
             gate.complete(Unit)
             advanceUntilIdle()
             root.onResume()
             advanceUntilIdle()
-            assertEquals(3, downloading.refreshCount)
+            assertEquals(3, provider.refreshCount)
         }
 
     @Test

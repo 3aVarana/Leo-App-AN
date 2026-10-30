@@ -186,7 +186,6 @@ private fun AgeMenu(
                     .semantics {
                         contentDescription = label
                         stateDescription = value
-                        role = Role.DropdownList
                     }.padding(vertical = 9.dp, horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {

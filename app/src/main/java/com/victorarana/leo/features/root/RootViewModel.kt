@@ -82,13 +82,15 @@ class RootViewModel(
         // is waited for only up to the ceiling, so the screen then shows what the provider says instead of the
         // bare ground; the check itself is never cancelled, and the download decision waits for its answer (on
         // the placeholder it would start a download that is not needed, or fail on a device that cannot run it).
-        viewModelScope.launch {
-            val check = launch { availabilityProvider.refresh() }
-            withTimeoutOrNull(AVAILABILITY_CHECK_CEILING_MILLIS) { check.join() }
-            availabilityChecked.value = true
-            check.join()
-            availabilityProvider.downloadIfNeeded()
-        }
+        // It is also the first resume check, so the first ON_RESUME (right after launch) doesn't ask AICore again.
+        resumeCheck =
+            viewModelScope.launch {
+                val check = launch { availabilityProvider.refresh() }
+                withTimeoutOrNull(AVAILABILITY_CHECK_CEILING_MILLIS) { check.join() }
+                availabilityChecked.value = true
+                check.join()
+                availabilityProvider.downloadIfNeeded()
+            }
     }
 
     /**
