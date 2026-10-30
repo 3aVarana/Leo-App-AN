@@ -14,12 +14,12 @@ Branch `port/phase-1-domain`. Nothing committed.
 
 ## Files changed
 
-- `domain/build.gradle.kts`: `java-test-fixtures` and `kotlin-serialization` plugins, `kotlinx-serialization-json` as `implementation` (and for test fixtures).
+- `domain/build.gradle.kts`: `java-test-fixtures` and `kotlin-serialization` plugins, `kotlinx-serialization-json` as `api`, because `:domain`'s public API exposes `Json` and `KSerializer` types (`LeoJson`, `ReaderPreferencesSerializer`); test fixtures get it through `api`.
 - `gradle/libs.versions.toml`: `kotlinxSerialization` 1.12.0 -> 1.11.0 (see deviation 1).
 
 ## Deviations from the plan or from iOS
 
-1. **kotlinx-serialization version.** The catalog's 1.12.0 was built with Kotlin 2.4 (metadata 2.4.0) and pulls in stdlib 2.4.10, which the project's Kotlin 2.2.10 compiler cannot read. Lowered to 1.11.0 (next newest; resolves to stdlib 2.3.20, readable by 2.2.x). This is a version change of an approved dependency; revisit if the Kotlin version is raised.
+1. **kotlinx-serialization version.** The catalog's 1.12.0 was built with Kotlin 2.4 (metadata 2.4.0) and pulls in stdlib 2.4.10, which the project's Kotlin 2.2.10 compiler cannot read. Lowered to 1.11.0 (next newest; resolves to stdlib 2.3.20, readable by 2.2.x). This is a version change of an approved dependency; the user approved it on 2026-10-29 when asked to commit and open the PR with this deviation listed. Revisit if the Kotlin version is raised.
 2. **UUIDs are written lowercase** (user decision, Q3); iOS writes uppercase. Decoding accepts both (`UuidSerializer`, test `decodesUpperCaseUuidsWrittenByIos`). The `savedFormat` test compares to the copied iOS golden with every `id` value lowercased on both sides (`withLowercaseIds`). The golden's ids are all digits, so the golden file itself is unchanged. An invalid UUID throws `SerializationException`.
 3. **Fixtures are top-level functions** (`readerPreferencesFixture`, `exerciseFixture`, `roundRecordFixture`, `topic`, `words`), not `X.fixture(...)`, because Kotlin extensions on a type's companion need a companion object that `Exercise` and `RoundRecord` don't have.
 4. **`RoundRecord` is a plain `class`** (equality by `id` only, as in iOS); `toString` omits `answers`.

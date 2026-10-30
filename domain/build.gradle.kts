@@ -18,7 +18,6 @@ tasks.withType<JavaCompile>().configureEach {
 
 dependencies {
     api(libs.kotlinx.serialization.json)
-    testFixturesImplementation(libs.kotlinx.serialization.json)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
 }
