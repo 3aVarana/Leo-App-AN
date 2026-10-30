@@ -81,35 +81,37 @@ class RootViewModel(
             )
 
     init {
+        // Under the save lock, and only while still loading: a save that lands first is not overwritten.
         viewModelScope.launch {
-            preferences.value =
-                preferencesRepository.load()?.let(PreferencesState::Ready) ?: PreferencesState.NotOnboarded
+            saving.withLock {
+                val loaded = preferencesRepository.load()?.let(PreferencesState::Ready) ?: PreferencesState.NotOnboarded
+                if (preferences.value == PreferencesState.Loading) preferences.value = loaded
+            }
         }
         // Checks AICore, then starts the download when the model is downloadable (phase-3 R2-N5). A slow AICore
         // is waited for only up to the ceiling, so the screen then shows what the provider says instead of the
         // bare ground; the check itself is never cancelled, and the download decision waits for its answer (on
         // the placeholder it would start a download that is not needed, or fail on a device that cannot run it).
-        // It is also the first resume check, so the first ON_RESUME (right after launch) doesn't ask AICore again.
-        // It stays active through a first download too (`downloadIfNeeded()` returns when `download()` does), so
-        // resumes meanwhile ask nothing: the download owns the availability then, and a refresh would write nothing.
-        resumeCheck =
-            viewModelScope.launch {
-                val check = launch { availabilityProvider.refresh() }
-                withTimeoutOrNull(AVAILABILITY_CHECK_CEILING_MILLIS) { check.join() }
-                availabilityChecked.value = true
-                check.join()
-                availabilityProvider.downloadIfNeeded()
-            }
+        viewModelScope.launch {
+            val check = launch { availabilityProvider.refresh() }
+            withTimeoutOrNull(AVAILABILITY_CHECK_CEILING_MILLIS) { check.join() }
+            availabilityChecked.value = true
+            check.join()
+            availabilityProvider.downloadIfNeeded()
+        }
     }
 
     /**
      * Asks AICore again when the app comes back to the foreground, and starts the download if the model has become
-     * downloadable meanwhile (after a failed download, or a device that was not ready). While a download runs,
-     * `download()` starts no other one but suspends until it ends; a resume meanwhile (a rotation, say) starts no
-     * second check while the first is still waiting.
+     * downloadable meanwhile (after a failed download, or a device that was not ready).
+     *
+     * Skipped until the launch check has answered or reached its ceiling, so the first ON_RESUME (right after launch)
+     * doesn't ask AICore a second time; after the ceiling it does, so a launch check that never returns doesn't stop
+     * every later one. While a download runs, `download()` starts no other one but suspends until it ends; a resume
+     * meanwhile (a rotation, say) starts no second check while that one is still waiting.
      */
     fun onResume() {
-        if (resumeCheck?.isActive == true) return
+        if (!availabilityChecked.value || resumeCheck?.isActive == true) return
         resumeCheck =
             viewModelScope.launch {
                 availabilityProvider.refresh()

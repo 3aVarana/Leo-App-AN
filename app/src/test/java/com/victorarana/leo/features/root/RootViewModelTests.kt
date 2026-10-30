@@ -270,6 +270,38 @@ class RootViewModelTests {
             assertEquals(3, provider.refreshCount)
         }
 
+    /** A launch check that never returns stops resume checks only until the ceiling. */
+    @Test
+    fun resumeAfterTheCeilingAsksAgainWhenTheLaunchCheckHangs() =
+        runTest {
+            val slow = StubModelAvailabilityProvider(refreshGate = CompletableDeferred())
+            val root = RootViewModel(repository, slow)
+            root.onResume()
+            runCurrent()
+            assertEquals(1, slow.refreshCount)
+
+            advanceTimeBy(RootViewModel.AVAILABILITY_CHECK_CEILING_MILLIS + 1)
+            root.onResume()
+            runCurrent()
+            assertEquals(2, slow.refreshCount)
+        }
+
+    /** A save that lands while preferences are still loading isn't overwritten by the load. */
+    @Test
+    fun saveDuringTheLoadIsNotOverwritten() =
+        runTest {
+            val gate = CompletableDeferred<Unit>()
+            val slowDisk = PreferencesRepositorySpy(loadGate = gate)
+            val root = RootViewModel(slowDisk, availability)
+            runCurrent()
+            val newer = readerPreferencesFixture(AgeGroup.FIFTEEN)
+            root.save(newer)
+            runCurrent()
+            gate.complete(Unit)
+            advanceUntilIdle()
+            assertEquals(PreferencesState.Ready(newer), root.preferencesState)
+        }
+
     @Test
     fun onboardingDraftIsFifteen() {
         assertEquals(AgeGroup.FIFTEEN, RootViewModel.onboardingDraft.ageGroup)

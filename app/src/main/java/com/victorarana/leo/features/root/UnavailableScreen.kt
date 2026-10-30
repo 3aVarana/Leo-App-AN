@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -133,10 +134,12 @@ private fun DownloadProgress(fraction: Float?) {
     val description = stringResource(R.string.unavailable_download_progress)
     // Capped at 99% below a whole download, so rounding never says 100% while it is still running. (Not rounded
     // down: a float such as 0.42 is just under it and would read 41%.)
+    // The app's locale, like the strings around it (a per-app language can differ from the JVM default).
+    val locale = LocalConfiguration.current.locales[0]
     val percent =
         fraction?.let {
             val shown = if (it < 1f) minOf(it, MAX_RUNNING_FRACTION) else it
-            NumberFormat.getPercentInstance().format(shown.toDouble())
+            NumberFormat.getPercentInstance(locale).format(shown.toDouble())
         }
     Column(
         modifier =
