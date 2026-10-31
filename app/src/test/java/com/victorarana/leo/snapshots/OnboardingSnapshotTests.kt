@@ -9,10 +9,10 @@ import com.victorarana.leo.domain.ReaderPreferences
 import com.victorarana.leo.domain.RoundSettings
 import com.victorarana.leo.features.preferences.AgeGroupPicker
 import com.victorarana.leo.features.preferences.OnboardingRoundSection
-import com.victorarana.leo.features.preferences.OnboardingScreen
 import com.victorarana.leo.features.preferences.OnboardingTopics
 import com.victorarana.leo.features.theme.leoReadableWidth
 import com.victorarana.leo.features.theme.leoScreenBackground
+import com.victorarana.leo.support.OnboardingScreenHost
 import com.victorarana.leo.support.SNAPSHOT_DEVICE_QUALIFIERS
 import com.victorarana.leo.support.assertViewSnapshot
 import com.victorarana.leo.support.preferencesEditorFixture
@@ -48,7 +48,7 @@ class OnboardingSnapshotTests {
     @Test
     fun firstScreen() =
         composeRule.assertViewSnapshot(this::class, "first-screen") {
-            OnboardingScreen(preferencesEditorFixture(ReaderPreferences(AgeGroup.FIFTEEN)))
+            OnboardingScreenHost(preferencesEditorFixture(ReaderPreferences(AgeGroup.FIFTEEN)))
         }
 
     /** The second screen as it's pushed. */

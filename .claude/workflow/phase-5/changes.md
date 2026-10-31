@@ -1,6 +1,6 @@
 # Phase 5: Preferences, changes
 
-Branch `port/phase-5-preferences`, baseline `7096ec3`. Nothing committed. `docs/learning/phase-5.md` is left to the user.
+Branch `port/phase-5-preferences`, baseline `7096ec3`. Pull request 3aVarana/Leo-App-AN#10. The learning note is `docs/learning/phase-5.md`.
 
 ## Files
 
@@ -65,3 +65,8 @@ No device was connected (`adb` is not on the PATH here), so the device checks (o
 - N-R2-2: `OnboardingRoute.Topics.ageGroup` uses `AgeGroup.fromRawValue` with `checkNotNull`.
 - N-R2-1 (accepted): the age group survives process death through the route argument plus a `LaunchedEffect` that writes it into the editor, not through a `SavedStateHandle`. Only the age group is restored; the rest of the draft is lost then.
 - N-R2-3: S4 (keyboard over the Settings field) and the haptic remain for the device pass.
+
+## PR review fixes (Claude review on #10)
+- Onboarding's nested `NavHostController` and the picker selection are hoisted into `RootScreen`, next to the app's `navController`. A check that briefly reports the model unavailable no longer sends the reader back to an empty age picker. `OnboardingScreen` now takes `navController`, `selection` and `onSelect`; tests use `support/OnboardingScreenHost`. New test `RootScreenTests.onboardingProgressSurvivesTheModelBrieflyBecomingUnavailable`, which fails without the hoisting.
+- Onboarding Done is wrapped in `dropUnlessResumed` like the other buttons.
+- Doc fixes: the learning note names the `review` field, and this file's header is updated.

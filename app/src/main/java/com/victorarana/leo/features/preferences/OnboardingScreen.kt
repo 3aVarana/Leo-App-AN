@@ -9,9 +9,6 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -21,9 +18,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.victorarana.leo.R
 import com.victorarana.leo.domain.AgeGroup
@@ -42,20 +39,22 @@ import com.victorarana.leo.features.theme.toTextStyle
 /**
  * Shown on first launch: the reader picks their age group, then their topics and how many texts a round has.
  * Port of `OnboardingView`. It owns a back stack of its own, so system back from the topics returns to the ages.
- * The picker's selection is screen state, not in the ViewModel (iOS `@State`), but survives rotation.
+ * The back stack and the picker's selection (iOS `@State`, not in the ViewModel) are hoisted by the caller, so they
+ * survive the gate briefly leaving composition as well as rotation.
  */
 @Composable
 fun OnboardingScreen(
     editor: PreferencesEditorViewModel,
+    navController: NavHostController,
+    selection: AgeGroup?,
+    onSelect: (AgeGroup) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val navController = rememberNavController()
-    var selection by rememberSaveable { mutableStateOf<AgeGroup?>(null) }
     NavHost(navController = navController, startDestination = OnboardingRoute.AgeGroups, modifier = modifier) {
         composable<OnboardingRoute.AgeGroups> {
             AgeGroupPicker(
                 selection = selection,
-                onSelect = { selection = it },
+                onSelect = onSelect,
                 // Dropped while the screen is leaving RESUMED, so a double tap pushes Topics once.
                 onContinue =
                     dropUnlessResumed {
@@ -152,7 +151,8 @@ fun OnboardingTopics(
             LeoButton(
                 text = stringResource(R.string.preferences_done),
                 kind = LeoButtonKind.Primary,
-                onClick = editor::save,
+                // Dropped while the screen is leaving RESUMED, like Continue and Settings' Done.
+                onClick = dropUnlessResumed { editor.save() },
             )
         },
     ) {

@@ -14,6 +14,7 @@ import com.victorarana.leo.domain.TopicNames
 import com.victorarana.leo.features.root.RootScreen
 import com.victorarana.leo.features.root.RootViewModel
 import com.victorarana.leo.features.theme.LeoTheme
+import com.victorarana.leo.support.OnboardingScreenHost
 import com.victorarana.leo.support.PreferencesRepositorySpy
 import com.victorarana.leo.support.StubModelAvailabilityProvider
 import com.victorarana.leo.support.StubTopicReviewRepository
@@ -85,7 +86,7 @@ class OnboardingScreenTests {
     fun topicsScreenRestoredAfterProcessDeathKeepsThePickedAgeGroup() {
         val tester = StateRestorationTester(composeRule)
         var editor = preferencesEditorFixture(ReaderPreferences(AgeGroup.FIFTEEN))
-        tester.setContent { LeoTheme { OnboardingScreen(editor) } }
+        tester.setContent { LeoTheme { OnboardingScreenHost(editor) } }
         composeRule.onNodeWithText("9 to 11").performClick()
         composeRule.onNodeWithText("Continue").performClick()
         composeRule.waitForIdle()

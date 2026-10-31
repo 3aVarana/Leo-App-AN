@@ -4,6 +4,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -99,6 +100,25 @@ class RootScreenTests {
         availability.set(ModelAvailability.Available)
         composeRule.waitForIdle()
         composeRule.onNodeWithText("History placeholder (phase 7)").assertIsDisplayed()
+    }
+
+    /** The same check mid-onboarding keeps the reader on the topics screen, with their age still picked. */
+    @Test
+    fun onboardingProgressSurvivesTheModelBrieflyBecomingUnavailable() {
+        show()
+        composeRule.onNodeWithText("9 to 11").performClick()
+        composeRule.onNodeWithText("Continue").performClick()
+        composeRule.waitForIdle()
+
+        availability.set(ModelAvailability.Unavailable(ModelUnavailableReason.OTHER))
+        composeRule.waitForIdle()
+        availability.set(ModelAvailability.Available)
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("What do you like reading about?").assertIsDisplayed()
+
+        composeRule.runOnUiThread { composeRule.activity.onBackPressedDispatcher.onBackPressed() }
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Continue").assertIsEnabled()
     }
 
     @Test
