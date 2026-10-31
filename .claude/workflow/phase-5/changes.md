@@ -76,3 +76,7 @@ No device was connected (`adb` is not on the PATH here), so the device checks (o
 - Known difference, accepted: unsaved Settings edits and `newTopic` are lost on process death. A restored Settings screen starts again from the saved preferences. Onboarding restores only the age group, from the route. iOS has no process death, and nothing is kept in a `SavedStateHandle`.
 - The comment in `RootScreen` now says the onboarding editor outlives onboarding until the Activity finishes, which is harmless.
 - Not changed: `canAdd` stays a getter over `uiState.value`, like the iOS computed property. `AddTopicField` collects `uiState`, so it recomposes when that value changes.
+
+## PR review fixes, third Claude review on #10
+- Hardening: the review rethrows a `CancellationException` only when its own job was cancelled. If the repository throws one while the job is still active (a timeout, a cancelled AICore future), it now shows "couldn't check" instead of leaving the editor stuck on "reviewing". New test `cancellationThrownByTheRepositoryShowsGenericMessage` fails without the fix. iOS has no such case, because a Swift `CancellationError` from inside the call still comes out as an error.
+- The Topics screen writing the route's age group into the editor stays as accepted in N-R2-1. Revisit it if the onboarding draft moves into a `SavedStateHandle`.

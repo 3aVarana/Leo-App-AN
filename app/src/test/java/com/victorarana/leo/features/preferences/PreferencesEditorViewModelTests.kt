@@ -12,6 +12,7 @@ import com.victorarana.leo.domain.TopicNames
 import com.victorarana.leo.domain.TopicReviewOutcome
 import com.victorarana.leo.domain.readerPreferencesFixture
 import com.victorarana.leo.support.StubTopicReviewRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -242,6 +243,18 @@ class PreferencesEditorViewModelTests {
             assertEquals(TopicMessage.Rejected("Try something gentler."), editor.message)
             assertEquals("scary stuff", editor.newTopic)
             assertEquals(draft, editor.draft)
+            assertFalse(editor.isReviewing)
+        }
+
+    /** A `CancellationException` from inside the repository, not a cancel of the review, doesn't leave it stuck. */
+    @Test
+    fun cancellationThrownByTheRepositoryShowsGenericMessage() =
+        runTest {
+            val reviews = StubTopicReviewRepository(listOf(Result.failure(CancellationException("timed out"))))
+            val editor = makeEditor(reviews = reviews)
+            editor.add("rockets")
+            runCurrent()
+            assertEquals(TopicMessage.ReviewFailed, editor.message)
             assertFalse(editor.isReviewing)
         }
 

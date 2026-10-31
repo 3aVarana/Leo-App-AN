@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 /**
@@ -211,7 +212,7 @@ class PreferencesEditorViewModel(
      * Asks the model whether [text] suits the reader, and adds its tidied-up phrase if it does. The review belongs
      * to the age group at this moment, and is dropped if it's cancelled.
      */
-    @Suppress("TooGenericExceptionCaught") // Any failure of the model reads as "couldn't check"; cancel is rethrown.
+    @Suppress("TooGenericExceptionCaught") // Any failure of the model reads as "couldn't check"; a cancel is rethrown.
     private fun startReview(text: String) {
         val group = group
         // Lazy, so `review` is set before the body can finish: on the immediate main dispatcher a repository that
@@ -222,7 +223,10 @@ class PreferencesEditorViewModel(
                     try {
                         Result.success(topicReviews.review(text, group))
                     } catch (cancelled: CancellationException) {
-                        throw cancelled
+                        // Rethrown only when this review was cancelled. One thrown from inside the repository while
+                        // the job is still active (a timeout, a cancelled AICore future) is a failure like any other.
+                        if (!isActive) throw cancelled
+                        Result.failure(cancelled)
                     } catch (error: Exception) {
                         Result.failure(error)
                     }
