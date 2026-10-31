@@ -17,12 +17,12 @@ class GenAiExerciseRepositoryTests {
     /** The language is picked when the repository is made, once per round. */
     @Test
     fun usesRoundAgeGroupAndLanguage() {
-        val repository = GenAiExerciseRepository(AgeGroup.NINE, ContentLanguage.english, FakeLanguageModel())
+        val repository = GenAiExerciseRepository(AgeGroup.NINE, FakeLanguageModel(), ContentLanguage.english)
         assertEquals(AgeGroup.NINE, repository.generator.ageGroup)
         assertEquals(ContentLanguage.english.locale, repository.generator.language.locale)
 
         val spanish = ContentLanguage(ULocale("es_ES"))
-        assertEquals(spanish, GenAiExerciseRepository(AgeGroup.SIX, spanish, FakeLanguageModel()).generator.language)
+        assertEquals(spanish, GenAiExerciseRepository(AgeGroup.SIX, FakeLanguageModel(), spanish).generator.language)
     }
 
     /** The `generationErrorDescription` test deferred from phase 1: the copy exists in every language. */

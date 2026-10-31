@@ -2,6 +2,7 @@ package com.victorarana.leo.livemodel
 
 import com.google.mlkit.genai.common.FeatureStatus
 import com.google.mlkit.genai.prompt.Generation
+import com.victorarana.leo.data.genai.MlKitLanguageModel
 import kotlinx.coroutines.runBlocking
 import org.junit.Assume.assumeTrue
 import org.junit.rules.TestRule
@@ -52,3 +53,6 @@ class LiveModelRule(
         return timeout.apply(guarded, description)
     }
 }
+
+/** The model the live suites talk to, over its own client: there is no `AppContainer` in an instrumented test. */
+val liveLanguageModel: MlKitLanguageModel by lazy { MlKitLanguageModel(Generation.getClient()) }

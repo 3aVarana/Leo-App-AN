@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    A tinted disc (a plain circle, drawn here) with the Material Symbols mark inside it, so one tint gives the hierarchical look of the SF Symbol: the disc is 30% of the tint, the mark is full. Mark path copied from google/material-design-icons: symbols/web/check/materialsymbolsoutlined/check_wght500_24px.svg.
+    Apache 2.0, see assets/licenses/Apache-2.0-MaterialSymbols.md.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="960"
+    android:viewportHeight="960">
+    <path
+        android:fillAlpha="0.3"
+        android:fillColor="#FF000000"
+        android:pathData="M480,40a440,440 0 1,0 0,880a440,440 0 1,0 0,-880z" />
+    <group
+        android:pivotX="480"
+        android:pivotY="480"
+        android:scaleX="0.72"
+        android:scaleY="0.72">
+        <group android:translateY="960">
+            <path
+                android:fillColor="#FF000000"
+                android:pathData="M382-232.35 146.35-468l64.89-64.89L382-362.13l366.76-366.76L813.65-664 382-232.35Z" />
+        </group>
+    </group>
+</vector>

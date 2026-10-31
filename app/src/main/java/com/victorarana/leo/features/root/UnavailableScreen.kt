@@ -1,0 +1,213 @@
+package com.victorarana.leo.features.root
+
+import androidx.annotation.StringRes
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.unit.dp
+import com.victorarana.leo.R
+import com.victorarana.leo.domain.ModelAvailability
+import com.victorarana.leo.domain.ModelUnavailableReason
+import com.victorarana.leo.features.components.Kicker
+import com.victorarana.leo.features.components.LeoIcon
+import com.victorarana.leo.features.components.ScrollingScreen
+import com.victorarana.leo.features.components.TopOffset
+import com.victorarana.leo.features.theme.LeoTextStyle
+import com.victorarana.leo.features.theme.LeoTheme
+import com.victorarana.leo.features.theme.LocalAnimatesPlaceholders
+import com.victorarana.leo.features.theme.rememberReduceMotion
+import com.victorarana.leo.features.theme.scaled
+import com.victorarana.leo.features.theme.toTextStyle
+import java.text.NumberFormat
+
+private const val TITLE_SIZE = 40f
+private const val PULSE_MILLIS = 900
+private const val PULSE_LOW_ALPHA = 0.35f
+private const val STATIC_ALPHA = 0.6f
+private const val MAX_RUNNING_FRACTION = 0.99f
+
+/** The words of one state: a title, the message, and for [UnavailableCopy.detail] a second paragraph. */
+private data class UnavailableCopy(
+    @param:StringRes val title: Int,
+    @param:StringRes val message: Int?,
+    @param:StringRes val detail: Int? = null,
+)
+
+private fun ModelAvailability.unavailableCopy(isAnswered: Boolean): UnavailableCopy? =
+    when (this) {
+        ModelAvailability.Available -> null
+        // Before AICore answers this is only the placeholder: the title and the bar, no claim of a download.
+        ModelAvailability.Downloadable, is ModelAvailability.Downloading ->
+            UnavailableCopy(
+                R.string.unavailable_preparing_title,
+                if (isAnswered) R.string.unavailable_downloading_message else null,
+            )
+        is ModelAvailability.Unavailable ->
+            when (reason) {
+                ModelUnavailableReason.DEVICE_NOT_ELIGIBLE ->
+                    UnavailableCopy(
+                        R.string.unavailable_title,
+                        R.string.unavailable_device_not_eligible_message,
+                        R.string.unavailable_device_not_eligible_detail,
+                    )
+                ModelUnavailableReason.DOWNLOAD_FAILED ->
+                    UnavailableCopy(R.string.unavailable_title, R.string.unavailable_download_failed_message)
+                ModelUnavailableReason.OTHER ->
+                    UnavailableCopy(R.string.unavailable_title, R.string.unavailable_other_message)
+            }
+    }
+
+/**
+ * Shown instead of the app when the on-device model can't be used yet: not on this device, failed, or still
+ * downloading. No button, like iOS (it can't act either, and a failed download gets no retry: plan Q3).
+ * The port of `UnavailableView`, which takes a reason; here the model may also be on its way, so it takes the
+ * whole [ModelAvailability] (D7). Draws nothing for [ModelAvailability.Available]: the root swaps screens first.
+ *
+ * @param isAnswered Whether AICore has answered yet; before that, a "downloading" state is only the placeholder.
+ */
+@Composable
+fun UnavailableScreen(
+    availability: ModelAvailability,
+    modifier: Modifier = Modifier,
+    isAnswered: Boolean = true,
+) {
+    val copy = availability.unavailableCopy(isAnswered) ?: return
+    val colors = LeoTheme.colors
+    ScrollingScreen(modifier) {
+        TopOffset(height = 140.dp)
+        LeoIcon(
+            id = R.drawable.ic_auto_awesome,
+            tint = colors.accent700,
+            size = 40.dp.scaled(relativeTo = 34f),
+            modifier =
+                Modifier
+                    .clearAndSetSemantics {},
+        )
+        Kicker(text = stringResource(R.string.app_name), modifier = Modifier.padding(top = 16.dp))
+        BasicText(
+            text = stringResource(copy.title),
+            modifier = Modifier.padding(vertical = 10.dp).semantics { heading() },
+            style = LeoTextStyle.display(TITLE_SIZE).toTextStyle().copy(color = colors.ink),
+        )
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            copy.message?.let {
+                BasicText(
+                    text = stringResource(it),
+                    style = LeoTextStyle.body.toTextStyle().copy(color = colors.inkSoft),
+                )
+            }
+            copy.detail?.let {
+                BasicText(
+                    text = stringResource(it),
+                    style = LeoTextStyle.body.toTextStyle().copy(color = colors.inkSoft),
+                )
+            }
+            if (availability is ModelAvailability.Downloading || availability == ModelAvailability.Downloadable) {
+                DownloadProgress(fraction = (availability as? ModelAvailability.Downloading)?.fraction)
+            }
+        }
+        Spacer(Modifier.weight(1f, min = 24.dp))
+    }
+}
+
+/** A square bar: determinate with the percent when the size is known, a pulse when not. */
+@Composable
+private fun DownloadProgress(fraction: Float?) {
+    val colors = LeoTheme.colors
+    val description = stringResource(R.string.unavailable_download_progress)
+    // The app's locale, like the strings around it (a per-app language can differ from the JVM default).
+    val locale = LocalConfiguration.current.locales[0]
+    val percentFormat = remember(locale) { NumberFormat.getPercentInstance(locale) }
+    // Capped at 99% below a whole download, so rounding never says 100% while it is still running. (Not rounded
+    // down: a float such as 0.42 is just under it and would read 41%.)
+    val percent =
+        fraction?.let {
+            val shown = if (it < 1f) minOf(it, MAX_RUNNING_FRACTION) else it
+            percentFormat.format(shown.toDouble())
+        }
+    Column(
+        modifier =
+            Modifier
+                .padding(top = 8.dp)
+                .semantics(mergeDescendants = true) {
+                    contentDescription = description
+                    if (fraction != null) {
+                        progressBarRangeInfo = ProgressBarRangeInfo(fraction, 0f..1f)
+                        stateDescription = percent.orEmpty()
+                    } else {
+                        progressBarRangeInfo = ProgressBarRangeInfo.Indeterminate
+                    }
+                },
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(4.dp)
+                .background(colors.neutral300)
+                .clipToBounds(),
+        ) {
+            if (fraction != null) {
+                Box(Modifier.fillMaxHeight().fillMaxWidth(fraction.coerceIn(0f, 1f)).background(colors.accent))
+            } else {
+                Box(
+                    Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth()
+                        .pulsing()
+                        .background(colors.accent),
+                )
+            }
+        }
+        if (percent != null) {
+            BasicText(
+                text = percent,
+                modifier = Modifier.clearAndSetSemantics {},
+                style = LeoTextStyle.caption.toTextStyle().copy(color = colors.inkMuted),
+            )
+        }
+    }
+}
+
+/**
+ * Pulses like [com.victorarana.leo.features.components.SkeletonLines]: still under reduced motion or in snapshots.
+ * The value is read in `graphicsLayer`, so the pulse redraws the bar without recomposing it.
+ */
+@Composable
+private fun Modifier.pulsing(): Modifier {
+    if (rememberReduceMotion() || !LocalAnimatesPlaceholders.current) return graphicsLayer { alpha = STATIC_ALPHA }
+    val pulse =
+        rememberInfiniteTransition(label = "download").animateFloat(
+            initialValue = 1f,
+            targetValue = PULSE_LOW_ALPHA,
+            animationSpec = infiniteRepeatable(tween(PULSE_MILLIS), RepeatMode.Reverse),
+            label = "pulse",
+        )
+    return graphicsLayer { alpha = pulse.value }
+}

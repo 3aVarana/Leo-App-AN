@@ -4,7 +4,6 @@ import android.icu.util.ULocale
 import com.victorarana.leo.data.genai.ContentLanguage
 import com.victorarana.leo.data.genai.ExerciseGenerator
 import com.victorarana.leo.data.genai.ExerciseRepair
-import com.victorarana.leo.data.genai.MlKitLanguageModel
 import com.victorarana.leo.domain.AgeGroup
 import com.victorarana.leo.domain.ComprehensionSkill
 import com.victorarana.leo.domain.DefaultTopics
@@ -41,7 +40,7 @@ class ExerciseGeneratorLiveTests(
     fun generatesUsableExercise() =
         runBlocking {
             val topics = DefaultTopics.topics(group).take(3).map { it.roundTopic(TopicNames.English, group) }
-            val generator = ExerciseGenerator(language, group, MlKitLanguageModel.shared)
+            val generator = ExerciseGenerator(language, group, liveLanguageModel)
 
             val exercise = generator.generate(topics, skill)
 

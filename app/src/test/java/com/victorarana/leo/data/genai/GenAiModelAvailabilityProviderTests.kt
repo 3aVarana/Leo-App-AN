@@ -55,6 +55,39 @@ class GenAiModelAvailabilityProviderTests {
             assertEquals(ModelAvailability.Available, provider.availability.value)
         }
 
+    /** A hung check that answers after a newer one has written doesn't overwrite it. */
+    @Test
+    fun anOlderRefreshDoesNotOverwriteANewerOne() =
+        runTest {
+            val release = CompletableDeferred<Unit>()
+            var first = true
+            val source =
+                FakeSource(
+                    status = { FeatureStatus.AVAILABLE },
+                )
+            val slowThenFast =
+                object : ModelStatusSource by source {
+                    override suspend fun checkStatus(): Int {
+                        if (first) {
+                            first = false
+                            release.await()
+                            return FeatureStatus.DOWNLOADABLE
+                        }
+                        return FeatureStatus.AVAILABLE
+                    }
+                }
+            val provider = GenAiModelAvailabilityProvider(slowThenFast)
+
+            val hung = launch { provider.refresh() }
+            advanceUntilIdle()
+            provider.refresh()
+            assertEquals(ModelAvailability.Available, provider.availability.value)
+
+            release.complete(Unit)
+            hung.join()
+            assertEquals(ModelAvailability.Available, provider.availability.value)
+        }
+
     @Test
     fun failingStatusCheckIsOther() =
         runTest {

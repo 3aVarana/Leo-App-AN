@@ -195,8 +195,10 @@ fun LeoTheme(
         MaterialTheme(
             colorScheme = colors.toMaterialColorScheme(darkTheme),
             typography = LeoMaterialTypography,
-            content = content,
-        )
+        ) {
+            // One "Remove animations" observer for the whole tree; components read it through the local.
+            ProvideReduceMotion(content)
+        }
     }
 }
 

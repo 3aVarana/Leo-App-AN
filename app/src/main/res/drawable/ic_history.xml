@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Material Symbols (Outlined, weight 500, 24px), path copied from google/material-design-icons: symbols/web/history/materialsymbolsoutlined/history_wght500_24px.svg.
+    Apache 2.0, see assets/licenses/Apache-2.0-MaterialSymbols.md.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="960"
+    android:viewportHeight="960">
+    <group android:translateY="960">
+        <path
+            android:fillColor="#FF000000"
+            android:pathData="M479.52-111.87q-141.35 0-246.24-93.77Q128.39-299.41 113.63-440h92.76q14.24 102.8 91.78 169.97 77.55 67.16 181.35 67.16 115.81 0 196.47-80.66Q756.65-364.2 756.65-480t-80.66-196.47q-80.66-80.66-196.47-80.66-66.13 0-124.22 29.97-58.08 29.96-98.37 83.09h103.31V-560H113.78v-245.98h83.59v90.41q52.2-63.52 125.93-98.04 73.74-34.52 156.22-34.52 76.44 0 143.49 29.1 67.06 29.1 116.75 78.79 49.7 49.7 78.79 116.75 29.1 67.06 29.1 143.49t-29.1 143.49q-29.09 67.05-78.79 116.75-49.69 49.69-116.75 78.79-67.05 29.1-143.49 29.1Zm110.81-198.22-152-152V-680h83.58v184L649.2-368.96l-58.87 58.87Z" />
+    </group>
+</vector>

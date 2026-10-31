@@ -1,7 +1,6 @@
 package com.victorarana.leo.livemodel
 
 import com.victorarana.leo.data.genai.ContentLanguage
-import com.victorarana.leo.data.genai.MlKitLanguageModel
 import com.victorarana.leo.data.genai.TopicValidator
 import com.victorarana.leo.domain.AgeGroup
 import com.victorarana.leo.domain.TopicReviewOutcome
@@ -18,7 +17,7 @@ class TopicValidatorLiveTests {
     @get:Rule
     val liveModel = LiveModelRule(timeoutMinutes = 1)
 
-    private val validator = TopicValidator(ContentLanguage.english, MlKitLanguageModel.shared)
+    private val validator = TopicValidator(ContentLanguage.english, liveLanguageModel)
     private val genericRejection = "That topic isn't a good fit for your reading practice. Try another one."
 
     private fun review(

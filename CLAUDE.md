@@ -34,7 +34,7 @@ The Android port of Leo, a reading comprehension app whose exercises are written
 
 ## Approved dependencies
 
-Only these, at the versions in `gradle/libs.versions.toml`: Compose BOM, Material 3, activity-compose, lifecycle (runtime, viewmodel-compose, runtime-compose), navigation-compose, kotlinx-serialization-json, kotlinx-coroutines (+ test), DataStore, Room (+ KSP compiler), ML Kit `genai-prompt` + `genai-schema-compiler`, KSP, Robolectric, Roborazzi, detekt, ktlint. Anything else is a decision for the user, not a task.
+Only these, at the versions in `gradle/libs.versions.toml`: Compose BOM, Material 3, activity-compose, core-splashscreen, lifecycle (runtime, viewmodel-compose, runtime-compose), navigation-compose, kotlinx-serialization-json, kotlinx-coroutines (+ test), DataStore, Room (+ KSP compiler), ML Kit `genai-prompt` + `genai-schema-compiler`, KSP, Robolectric, Roborazzi, detekt, ktlint. Anything else is a decision for the user, not a task.
 
 ## Architecture
 
