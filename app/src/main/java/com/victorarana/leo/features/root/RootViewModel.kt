@@ -4,9 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.victorarana.leo.data.repositories.ModelAvailabilityProvider
 import com.victorarana.leo.data.repositories.PreferencesRepository
+import com.victorarana.leo.data.repositories.TopicReviewRepository
 import com.victorarana.leo.domain.AgeGroup
 import com.victorarana.leo.domain.ModelAvailability
 import com.victorarana.leo.domain.ReaderPreferences
+import com.victorarana.leo.domain.TopicNames
+import com.victorarana.leo.features.preferences.PreferencesEditorViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -50,12 +53,14 @@ data class RootUiState(
 )
 
 /**
- * Owns the reader's preferences and is the only place they are saved. The phase-4 subset of iOS `RootViewModel`:
- * the quiz, history and editors join it in phases 5 to 7.
+ * Owns the reader's preferences and is the only place they are saved. The phase-5 subset of iOS `RootViewModel`:
+ * the quiz and history join it in phases 6 and 7.
  */
 class RootViewModel(
     private val preferencesRepository: PreferencesRepository,
     private val availabilityProvider: ModelAvailabilityProvider,
+    private val topicReviews: TopicReviewRepository,
+    private val topicNames: TopicNames,
 ) : ViewModel() {
     private val preferences = MutableStateFlow<PreferencesState>(PreferencesState.Loading)
     private val availabilityChecked = MutableStateFlow(false)
@@ -152,6 +157,18 @@ class RootViewModel(
             }
         }
     }
+
+    /** An editor for the first launch. Saving it ends onboarding. */
+    fun makeOnboardingEditor(): PreferencesEditorViewModel = makeEditor(onboardingDraft)
+
+    /** An editor over the current preferences. Null before onboarding is done. */
+    fun makeSettingsEditor(): PreferencesEditorViewModel? =
+        (preferences.value as? PreferencesState.Ready)?.let { makeEditor(it.preferences) }
+
+    // Saves through this ViewModel, which outlives every editor (iOS captures `self` weakly; the editors here are
+    // owned by the Activity's store or a back-stack entry, both inside this one's lifetime).
+    private fun makeEditor(draft: ReaderPreferences) =
+        PreferencesEditorViewModel(draft, topicReviews, topicNames, onSave = ::save)
 
     companion object {
         /** How long the first launch frame waits for AICore's first answer. */

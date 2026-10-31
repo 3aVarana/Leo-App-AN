@@ -111,4 +111,31 @@
     <string name="unavailable_downloading_message">O Gemini Nano está sendo baixado neste dispositivo. O Leo abre quando estiver pronto.</string>
     <string name="unavailable_download_failed_message">Não foi possível baixar o Gemini Nano.</string>
     <string name="unavailable_download_progress">Progresso do download</string>
+    <string name="preferences_welcome">Boas-vindas ao Leo</string>
+    <string name="onboarding_age_title">Quantos anos você tem?</string>
+    <string name="onboarding_age_message">Cada texto é escrito para a sua idade: o tamanho, as palavras, as perguntas.</string>
+    <string name="onboarding_continue">Continuar</string>
+    <string name="onboarding_topics_title">Sobre o que você gosta de ler?</string>
+    <string name="onboarding_topics_count" tools:ignore="PluralsCandidate">%1$d temas ativados · mantenha pelo menos 3. O Leo escolhe um para cada texto.</string>
+    <string name="onboarding_suggested_for">Sugeridos para %1$s</string>
+    <string name="preferences_round">Rodada</string>
+    <string name="preferences_done">OK</string>
+    <string name="topics_your_topics">Seus temas</string>
+    <string name="topics_add_placeholder">Adicione um tema</string>
+    <string name="topics_add">Adicionar</string>
+    <string name="topics_minimum_hint">Pelo menos 3 temas precisam ficar ativados.</string>
+    <string name="topics_minimum_warning">Mantenha pelo menos 3 temas ativados.</string>
+    <string name="topics_invalid_length">Os temas devem ter entre 2 e 60 caracteres.</string>
+    <string name="topics_already_on_list">Esse tema já está na sua lista.</string>
+    <string name="topics_too_many">Você pode ter até 20 temas próprios.</string>
+    <string name="topics_review_failed">Não conseguimos verificar esse tema. Tente novamente.</string>
+    <string name="settings_title">Ajustes</string>
+    <string name="settings_cancel">Cancelar</string>
+    <string name="settings_reading">Leitura</string>
+    <string name="settings_reading_timer">Temporizador de leitura</string>
+    <string name="settings_reading_timer_caption">A pergunta substitui o texto quando o tempo acaba. Sem limite enquanto o TalkBack está ativado.</string>
+    <string name="settings_suggested_count" tools:ignore="PluralsCandidate">Sugeridos · %1$d ativados</string>
+    <string name="settings_reset">Redefinir</string>
+    <string name="texts_per_round">Textos por rodada</string>
+    <string name="texts_per_round_caption">Quantos textos curtos cada rodada tem, com uma pergunta depois de cada um.</string>
 </resources>

@@ -9,8 +9,13 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.compose.rememberNavController
 import com.victorarana.leo.domain.ModelAvailability
+import com.victorarana.leo.features.preferences.OnboardingScreen
+import com.victorarana.leo.features.preferences.PreferencesEditorViewModel
 import com.victorarana.leo.features.theme.leoScreenBackground
 
 /** Which screen the gates pick (iOS `RootView.body`'s switch). */
@@ -57,8 +62,16 @@ fun RootScreen(
             Crossfade(targetState = gate, label = "root-gate") {
                 when (it) {
                     Gate.Loading -> Box(Modifier.fillMaxSize().leoScreenBackground())
-                    Gate.Onboarding -> OnboardingPlaceholder()
-                    Gate.App -> LeoNavHost(navController = navController)
+                    Gate.Onboarding -> {
+                        // In the Activity's store (the gate isn't a destination), so a rotation keeps the draft.
+                        val editor =
+                            viewModel<PreferencesEditorViewModel>(
+                                key = "onboarding",
+                                factory = viewModelFactory { initializer { viewModel.makeOnboardingEditor() } },
+                            )
+                        OnboardingScreen(editor)
+                    }
+                    Gate.App -> LeoNavHost(navController = navController, root = viewModel)
                 }
             }
         } else {

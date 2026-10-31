@@ -10,10 +10,12 @@ import androidx.compose.ui.test.performClick
 import com.victorarana.leo.domain.AgeGroup
 import com.victorarana.leo.domain.ModelAvailability
 import com.victorarana.leo.domain.ModelUnavailableReason
+import com.victorarana.leo.domain.TopicNames
 import com.victorarana.leo.domain.readerPreferencesFixture
 import com.victorarana.leo.features.theme.LeoTheme
 import com.victorarana.leo.support.PreferencesRepositorySpy
 import com.victorarana.leo.support.StubModelAvailabilityProvider
+import com.victorarana.leo.support.StubTopicReviewRepository
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -31,7 +33,10 @@ class RootScreenTests {
 
     private fun show() {
         // The intro blocks taps while it plays; these tests are about the gates.
-        val viewModel = RootViewModel(repository, availability).apply { onIntroPlayed() }
+        val viewModel =
+            RootViewModel(repository, availability, StubTopicReviewRepository(), TopicNames.English).apply {
+                onIntroPlayed()
+            }
         composeRule.setContent { LeoTheme { RootScreen(viewModel) } }
         composeRule.waitForIdle()
     }
@@ -58,7 +63,7 @@ class RootScreenTests {
     @Test
     fun availableWithoutPreferencesShowsOnboarding() {
         show()
-        composeRule.onNodeWithText("Onboarding placeholder (phase 5)").assertIsDisplayed()
+        composeRule.onNodeWithText("How old are you?").assertIsDisplayed()
     }
 
     @Test

@@ -111,4 +111,31 @@
     <string name="unavailable_downloading_message">Gemini Nano is downloading to this device. Leo opens when it\'s ready.</string>
     <string name="unavailable_download_failed_message">Gemini Nano couldn\'t be downloaded.</string>
     <string name="unavailable_download_progress">Download progress</string>
+    <string name="preferences_welcome">Welcome to Leo</string>
+    <string name="onboarding_age_title">How old are you?</string>
+    <string name="onboarding_age_message">Every text is written for your age — its length, its words, its questions.</string>
+    <string name="onboarding_continue">Continue</string>
+    <string name="onboarding_topics_title">What do you like reading about?</string>
+    <string name="onboarding_topics_count" tools:ignore="PluralsCandidate">%1$d topics on · keep at least 3. Leo picks one for each text.</string>
+    <string name="onboarding_suggested_for">Suggested for %1$s</string>
+    <string name="preferences_round">Round</string>
+    <string name="preferences_done">Done</string>
+    <string name="topics_your_topics">Your topics</string>
+    <string name="topics_add_placeholder">Add a topic</string>
+    <string name="topics_add">Add</string>
+    <string name="topics_minimum_hint">At least 3 topics must stay on.</string>
+    <string name="topics_minimum_warning">Keep at least 3 topics on.</string>
+    <string name="topics_invalid_length">Topics must be between 2 and 60 characters.</string>
+    <string name="topics_already_on_list">That topic is already on your list.</string>
+    <string name="topics_too_many">You can have up to 20 of your own topics.</string>
+    <string name="topics_review_failed">We couldn\'t check that topic. Please try again.</string>
+    <string name="settings_title">Settings</string>
+    <string name="settings_cancel">Cancel</string>
+    <string name="settings_reading">Reading</string>
+    <string name="settings_reading_timer">Reading timer</string>
+    <string name="settings_reading_timer_caption">The question replaces the text when time runs out. No limit while TalkBack is on.</string>
+    <string name="settings_suggested_count" tools:ignore="PluralsCandidate">Suggested · %1$d on</string>
+    <string name="settings_reset">Reset</string>
+    <string name="texts_per_round">Texts per round</string>
+    <string name="texts_per_round_caption">How many short texts each round has, with a question after each.</string>
 </resources>

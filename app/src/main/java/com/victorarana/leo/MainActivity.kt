@@ -18,7 +18,12 @@ class MainActivity : ComponentActivity() {
         viewModelFactory {
             initializer {
                 val container = (application as LeoApplication).container
-                RootViewModel(container.preferences, container.availability)
+                RootViewModel(
+                    container.preferences,
+                    container.availability,
+                    container.topicReviews,
+                    container.topicNames,
+                )
             }
         }
     }
