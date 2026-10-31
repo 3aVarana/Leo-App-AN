@@ -72,6 +72,8 @@ fun RootScreen(
                     Gate.Loading -> Box(Modifier.fillMaxSize().leoScreenBackground())
                     Gate.Onboarding -> {
                         // In the Activity's store (the gate isn't a destination), so a rotation keeps the draft.
+                        // It then outlives onboarding until the Activity finishes; harmless, since the gate never
+                        // comes back and `save()` already cancelled its review.
                         val editor =
                             viewModel<PreferencesEditorViewModel>(
                                 key = "onboarding",

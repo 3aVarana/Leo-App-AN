@@ -70,3 +70,9 @@ No device was connected (`adb` is not on the PATH here), so the device checks (o
 - Onboarding's nested `NavHostController` and the picker selection are hoisted into `RootScreen`, next to the app's `navController`. A check that briefly reports the model unavailable no longer sends the reader back to an empty age picker. `OnboardingScreen` now takes `navController`, `selection` and `onSelect`; tests use `support/OnboardingScreenHost`. New test `RootScreenTests.onboardingProgressSurvivesTheModelBrieflyBecomingUnavailable`, which fails without the hoisting.
 - Onboarding Done is wrapped in `dropUnlessResumed` like the other buttons.
 - Doc fixes: the learning note names the `review` field, and this file's header is updated.
+
+## PR review fixes, second Claude review on #10
+- `settings_suggested_count` is now a `<plurals>` resource read with `pluralStringResource`. The count can be 1 when two or more custom topics keep the minimum, and es/pt-BR were ungrammatical ("1 activados"). iOS has the same bug, since `Localizable.xcstrings` has no plural variants. The user approved the fix. New `one` forms: es "Sugeridos · 1 activado", pt-BR "Sugeridos · 1 ativado". es and pt-BR also get a `many` form, the same as `other`; Android lint requires it. en is unchanged. `onboarding_topics_count` stays a plain string (Q5), because it is never below 3.
+- Known difference, accepted: unsaved Settings edits and `newTopic` are lost on process death. A restored Settings screen starts again from the saved preferences. Onboarding restores only the age group, from the route. iOS has no process death, and nothing is kept in a `SavedStateHandle`.
+- The comment in `RootScreen` now says the onboarding editor outlives onboarding until the Activity finishes, which is harmless.
+- Not changed: `canAdd` stays a getter over `uiState.value`, like the iOS computed property. `AddTopicField` collects `uiState`, so it recomposes when that value changes.

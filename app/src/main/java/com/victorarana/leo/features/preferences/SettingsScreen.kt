@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
@@ -111,7 +112,11 @@ fun SettingsScreen(
             ) {
                 Box(Modifier.weight(1f)) {
                     SectionKicker(
-                        stringResource(R.string.settings_suggested_count, state.enabledSuggestedCount),
+                        pluralStringResource(
+                            R.plurals.settings_suggested_count,
+                            state.enabledSuggestedCount,
+                            state.enabledSuggestedCount,
+                        ),
                         top = 0.dp,
                         bottom = 0.dp,
                     )

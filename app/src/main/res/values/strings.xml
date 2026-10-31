@@ -134,7 +134,10 @@
     <string name="settings_reading">Reading</string>
     <string name="settings_reading_timer">Reading timer</string>
     <string name="settings_reading_timer_caption">The question replaces the text when time runs out. No limit while TalkBack is on.</string>
-    <string name="settings_suggested_count" tools:ignore="PluralsCandidate">Suggested · %1$d on</string>
+    <plurals name="settings_suggested_count">
+        <item quantity="one">Suggested · %1$d on</item>
+        <item quantity="other">Suggested · %1$d on</item>
+    </plurals>
     <string name="settings_reset">Reset</string>
     <string name="texts_per_round">Texts per round</string>
     <string name="texts_per_round_caption">How many short texts each round has, with a question after each.</string>

@@ -134,7 +134,11 @@
     <string name="settings_reading">Lectura</string>
     <string name="settings_reading_timer">Temporizador de lectura</string>
     <string name="settings_reading_timer_caption">La pregunta sustituye al texto cuando se acaba el tiempo. Sin límite mientras TalkBack está activado.</string>
-    <string name="settings_suggested_count" tools:ignore="PluralsCandidate">Sugeridos · %1$d activados</string>
+    <plurals name="settings_suggested_count">
+        <item quantity="one">Sugeridos · %1$d activado</item>
+        <item quantity="many">Sugeridos · %1$d activados</item>
+        <item quantity="other">Sugeridos · %1$d activados</item>
+    </plurals>
     <string name="settings_reset">Restablecer</string>
     <string name="texts_per_round">Textos por ronda</string>
     <string name="texts_per_round_caption">Cuántos textos breves tiene cada ronda, con una pregunta después de cada uno.</string>
