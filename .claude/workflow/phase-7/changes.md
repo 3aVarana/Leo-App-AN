@@ -98,3 +98,8 @@ Commands after the fixes: `./gradlew assembleDebug` BUILD SUCCESSFUL; `./gradlew
 - **Not changed: `round_review_missed` stays a plain string.** The review asks for `<plurals>` because es/pt-BR read "Repasar 1 falladas" / "Revisar 1 erradas". iOS has the same single string with no plural variants (`Localizable.xcstrings`, "Review %lld missed"), and phase 6 decided plain strings for this case (phase-6 Q5, iOS parity). The user deferred it to phase 8 (es and pt-BR complete); noted in `docs/Leo-Android-Port-Plan.md`.
 - **`delete` KDoc** now says that a read failing after a delete that worked shows no rounds and closes History, like any failed load, as on iOS.
 - **`pendingDeletes`** is a plain set: it is only touched on the main thread.
+
+## Review notes (PR #12 fifth review)
+
+- **Restore order tied to the store's.** `RoundHistoryDao.summaries` and the failed-delete restore in `RoundHistoryViewModel.delete` now point at each other: both sort newest first by `finishedAt` alone.
+- **Not changed: `sections` stays in the ViewModel file.** The review suggests moving `sections(...)` and `HistorySection` to `:domain`. iOS keeps both in `Features/History/RoundHistoryViewModel.swift`, not `Domain/`, and the port keeps iOS's layout so files compare side by side (CLAUDE.md, Architecture); the grouping is already covered by `RoundHistoryViewModelTests`.

@@ -166,6 +166,7 @@ class RoundHistoryViewModel(
                 // Confirmed again unless another delete or a load is still on its way; those settle it.
                 val settled = pendingDeletes.isEmpty() && loading?.isActive != true
                 publish {
+                    // The store's order (`RoundHistoryDao.summaries`: newest first by `finishedAt`, nothing else).
                     val restored = summaries.filterNot { it.id == id } + listOfNotNull(removed)
                     copy(summaries = restored.sortedByDescending { it.finishedAt }, isLoaded = isLoaded || settled)
                 }

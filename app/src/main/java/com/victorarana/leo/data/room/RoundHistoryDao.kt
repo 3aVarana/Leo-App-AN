@@ -33,7 +33,10 @@ interface RoundHistoryDao {
         insertAnswers(answers)
     }
 
-    /** Never reads the answers table. */
+    /**
+     * Never reads the answers table. Newest first by `finishedAt` alone: `RoundHistoryViewModel.delete` sorts a row
+     * it puts back the same way, so change both together.
+     */
     @Query("SELECT id, finishedAt, results FROM StoredRound WHERE ageGroup = :ageGroup ORDER BY finishedAt DESC")
     suspend fun summaries(ageGroup: String): List<StoredRoundSummary>
 
