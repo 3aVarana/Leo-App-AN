@@ -39,7 +39,9 @@ class AppContainer(
 
     private val generativeModel: GenerativeModel by lazy { Generation.getClient() }
 
-    // The debug build can swap in a stub model (`StubModelHook`); the release one always has Gemini Nano.
+    // The debug build can swap in a stub model (`StubModelHook`); the release one always has Gemini Nano. The order
+    // matters: this and `availability` must stay lazy and unread until `MainActivity.onCreate` has called
+    // `StubModelHook.enableIfRequested`, or an earlier read keeps Gemini Nano for the whole process.
     private val languageModel: LanguageModel by lazy {
         StubModelHook.languageModel()
             ?: MlKitLanguageModel(generativeModel)

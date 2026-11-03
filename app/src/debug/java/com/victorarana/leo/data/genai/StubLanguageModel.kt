@@ -76,7 +76,7 @@ class StubLanguageModel(
             generateSequence(0) { it + 1 }
                 .flatMap { round -> sentences(topic, round).asSequence() }
                 .flatMap { it.split(' ').asSequence() }
-                .take(count)
+                .take(count.coerceAtLeast(1))
                 .toList()
         return words.dropLast(1) + words.last().trimEnd('.', ',') + "."
     }
