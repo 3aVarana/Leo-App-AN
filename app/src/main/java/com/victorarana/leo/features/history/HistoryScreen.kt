@@ -126,10 +126,11 @@ fun HistoryScreen(
             item(key = "header") { Header(state) }
             for ((index, section) in state.sections.withIndex()) {
                 // Pinned while its rounds scroll under it, like a plain `List`'s section headers (Q3). The ground
-                // behind it hides what passes. The key is text: a lazy list saves its keys. It carries the index
-                // because a kind can come back further down (a round dated after this week, from a clock moved
-                // back, is "Earlier in <month>" above "This week"), and a repeated key crashes a lazy list.
-                stickyHeader(key = "section-$index-${section.kind}") {
+                // behind it hides what passes. The key is text: a lazy list saves its keys. It is the section's
+                // first round, not its kind: a kind can come back further down (a round dated after this week, from
+                // a clock moved back, is "Earlier in <month>" above "This week"), and a repeated key crashes a lazy
+                // list. Unlike an index, it stays the same when a section above is deleted.
+                stickyHeader(key = "section-${section.rounds.first().id}") {
                     SectionHeader(section.kind, isFirst = index == 0, locale = locale)
                 }
                 items(section.rounds, key = { it.id }) { summary ->
@@ -157,10 +158,14 @@ private fun Header(state: RoundHistoryUiState) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Headline(text = stringResource(R.string.history_title), style = LeoTextStyle.display(TITLE_SIZE).toTextStyle())
-        BasicText(
-            text = pluralStringResource(R.plurals.history_summary, state.roundCount, state.roundCount, percent),
-            style = LeoTextStyle.bodyLarge.toTextStyle().copy(color = LeoTheme.colors.inkSoft),
-        )
+        // iOS only shows History with rounds, read at once. Here the list can be empty for a moment (a restored route
+        // before its load, the last round's delete before the store answers): no "0 rounds read" then.
+        if (state.hasRounds) {
+            BasicText(
+                text = pluralStringResource(R.plurals.history_summary, state.roundCount, state.roundCount, percent),
+                style = LeoTextStyle.bodyLarge.toTextStyle().copy(color = LeoTheme.colors.inkSoft),
+            )
+        }
     }
 }
 

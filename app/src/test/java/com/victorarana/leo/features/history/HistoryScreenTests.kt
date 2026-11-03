@@ -130,6 +130,30 @@ class HistoryScreenTests {
         composeRule.onNode(hasContentDescription("November 3", substring = true)).assertIsDisplayed()
     }
 
+    /** Before its first load (a restored route) History is empty for a moment: no "0 rounds read" summary then. */
+    @Test
+    fun theSummaryWaitsForRounds() {
+        composeRule.setContent {
+            LeoTheme { HistoryScreen(RoundHistoryUiState(), onOpen = {}, onDelete = {}, onBack = {}) }
+        }
+        composeRule.onNodeWithText("Your rounds").assertIsDisplayed()
+        composeRule.onNodeWithText("answered right", substring = true).assertDoesNotExist()
+    }
+
+    /** While the last round's delete waits for the store, the list is empty: the summary goes, the title stays. */
+    @Test
+    fun theSummaryLeavesWhileTheLastDeleteWaits() {
+        show(twoMisses)
+        openHistory()
+        val gate = CompletableDeferred<Unit>().also { repository.deleteGate = it }
+
+        rows()[0].performTouchInput { swipeLeft() }
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Your rounds").assertIsDisplayed()
+        composeRule.onNodeWithText("answered right", substring = true).assertDoesNotExist()
+        gate.complete(Unit)
+    }
+
     @Test
     fun tappingARowOpensTheRoundAndBackReturns() {
         show(twoMisses)
