@@ -19,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -74,7 +75,7 @@ fun ReviewScreen(
         BackBar(
             parentTitle = parentTitle,
             onBack = onBack,
-            trailing = stringResource(R.string.review_count, selection + 1, misses.size),
+            trailing = pluralStringResource(R.plurals.review_count, misses.size, selection + 1, misses.size),
         )
         HorizontalPager(state = pagerState, modifier = Modifier.weight(1f).fillMaxWidth()) { page ->
             ReviewPage(misses[page])

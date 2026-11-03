@@ -3,8 +3,6 @@ package com.victorarana.leo.features.history
 import android.icu.text.DateFormat
 import android.icu.util.Calendar
 import android.icu.util.TimeZone
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalConfiguration
 import java.text.NumberFormat
 import java.time.DayOfWeek
 import java.time.Instant
@@ -87,10 +85,6 @@ fun roundKicker(
     is24Hour: Boolean,
 ): String = format(DAY_AND_ABBREVIATED_MONTH + timeSkeleton(is24Hour), locale, zone, instant)
 
-/** The locale the screen's resources resolved to, read from the configuration so a change of language recomposes. */
-@Composable
-internal fun currentLocale(): Locale = LocalConfiguration.current.locales[0]
-
 /** `.percent.precision(.fractionLength(0))`: "78%", whole percents, in [locale]. */
 fun percentText(
     share: Double,
@@ -102,7 +96,7 @@ fun percentText(
         .format(share)
 
 /** The locale's first weekday (`Calendar.firstWeekday`), which Android 14's "First day of week" setting changes. */
-fun localeFirstDayOfWeek(locale: Locale = Locale.getDefault()): DayOfWeek {
+fun localeFirstDayOfWeek(locale: Locale): DayOfWeek {
     // `Calendar.SUNDAY` is 1 and `SATURDAY` 7, `DayOfWeek.MONDAY` is 1 and `SUNDAY` 7: shift by 5, wrap, add 1.
     val day = Calendar.getInstance(locale).firstDayOfWeek
     return DayOfWeek.of((day + SUNDAY_TO_MONDAY_BASED) % DAYS_IN_WEEK + 1)

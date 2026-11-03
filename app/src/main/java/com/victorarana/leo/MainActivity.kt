@@ -9,10 +9,12 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.victorarana.leo.features.history.RoundHistoryViewModel
+import com.victorarana.leo.features.history.localeFirstDayOfWeek
 import com.victorarana.leo.features.quiz.QuizViewModel
 import com.victorarana.leo.features.root.RootScreen
 import com.victorarana.leo.features.root.RootViewModel
 import com.victorarana.leo.features.theme.LeoTheme
+import com.victorarana.leo.features.theme.deviceLocale
 
 class MainActivity : ComponentActivity() {
     // The round history, like the quiz a ViewModel in the Activity's store (iOS `RootViewModel.history`, built in
@@ -20,8 +22,15 @@ class MainActivity : ComponentActivity() {
     private val history: RoundHistoryViewModel by viewModels {
         viewModelFactory {
             initializer {
-                val container = (application as LeoApplication).container
-                RoundHistoryViewModel(repository = container.history, storeScope = container.applicationScope)
+                val app = application
+                val container = (app as LeoApplication).container
+                RoundHistoryViewModel(
+                    repository = container.history,
+                    storeScope = container.applicationScope,
+                    // The region of the device, not of the app's own language (S1: formatting locale). Captures the
+                    // Application, not this Activity: the ViewModel outlives the Activity across a rotation.
+                    firstDayOfWeek = { localeFirstDayOfWeek(deviceLocale(app)) },
+                )
             }
         }
     }
@@ -62,6 +71,8 @@ class MainActivity : ComponentActivity() {
         // Swaps the starting theme (the system splash: the ground) for the app theme; must precede super.
         installSplashScreen()
         super.onCreate(savedInstanceState)
+        // Debug builds only do anything here: the stub model for emulators (release: a no-op).
+        StubModelHook.enableIfRequested(intent)
         enableEdgeToEdge()
         setContent {
             LeoTheme {

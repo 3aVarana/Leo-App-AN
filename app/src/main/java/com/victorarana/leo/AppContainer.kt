@@ -7,6 +7,7 @@ import com.victorarana.leo.data.datastore.DataStorePreferencesRepository
 import com.victorarana.leo.data.genai.GenAiExerciseRepository
 import com.victorarana.leo.data.genai.GenAiModelAvailabilityProvider
 import com.victorarana.leo.data.genai.GenAiTopicReviewRepository
+import com.victorarana.leo.data.genai.LanguageModel
 import com.victorarana.leo.data.genai.MlKitLanguageModel
 import com.victorarana.leo.data.genai.MlKitModelStatusSource
 import com.victorarana.leo.data.repositories.ExerciseRepository
@@ -37,14 +38,19 @@ class AppContainer(
     private val appContext: Context = context.applicationContext
 
     private val generativeModel: GenerativeModel by lazy { Generation.getClient() }
-    private val languageModel: MlKitLanguageModel by lazy { MlKitLanguageModel(generativeModel) }
+
+    // The debug build can swap in a stub model (`StubModelHook`); the release one always has Gemini Nano.
+    private val languageModel: LanguageModel by lazy {
+        StubModelHook.languageModel()
+            ?: MlKitLanguageModel(generativeModel)
+    }
 
     val topicNames: ResourceTopicNames by lazy { ResourceTopicNames(appContext) }
 
     val preferences: PreferencesRepository by lazy { DataStorePreferencesRepository.create(appContext) }
 
     val availability: ModelAvailabilityProvider by lazy {
-        GenAiModelAvailabilityProvider(MlKitModelStatusSource(generativeModel))
+        StubModelHook.availability() ?: GenAiModelAvailabilityProvider(MlKitModelStatusSource(generativeModel))
     }
 
     val topicReviews: TopicReviewRepository by lazy {

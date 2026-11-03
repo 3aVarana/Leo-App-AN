@@ -33,6 +33,14 @@ android {
             }
         }
     }
+    androidResources {
+        // The three languages of the strings: Android 13's "App languages" lists exactly these, and the libraries'
+        // own strings (Compose and Material labels and state descriptions) in other languages are not packaged.
+        // TalkBack's role names come from TalkBack, in the system language. unqualifiedResLocale is set in
+        // resources.properties.
+        generateLocaleConfig = true
+        localeFilters += listOf("en", "es", "pt-rBR")
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -143,6 +151,8 @@ detekt {
     allRules = false
     config.setFrom(rootProject.file("config/detekt/detekt.yml"))
     parallel = true
+    // The default sources are main and test; the debug stub model and its release twin are code too.
+    source.from("src/debug/java", "src/release/java", "src/testDebug/java")
 }
 
 tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {

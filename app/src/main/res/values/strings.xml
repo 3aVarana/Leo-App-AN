@@ -1,5 +1,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Leo</string>
+    <!-- The language tag of these strings, for formatters (iOS Locale.current). A tag, not text to translate. -->
+    <string name="resource_locale">en</string>
     <string name="age_group_display_name_six">6 to 8</string>
     <string name="age_group_display_name_nine">9 to 11</string>
     <string name="age_group_display_name_twelve">12 to 14</string>
@@ -146,7 +148,10 @@
     <string name="quiz_start">Start</string>
     <string name="quiz_topics_none">Drawn from your topics. One question after each.</string>
     <string name="quiz_topics_list">Drawn from %1$s. One question after each.</string>
-    <string name="quiz_topics_more" tools:ignore="PluralsCandidate">Drawn from %1$s and %2$d more of your topics. One question after each.</string>
+    <plurals name="quiz_topics_more">
+        <item quantity="one">Drawn from %1$s and %2$d more of your topics. One question after each.</item>
+        <item quantity="other">Drawn from %1$s and %2$d more of your topics. One question after each.</item>
+    </plurals>
     <string name="quiz_topic_separator">", "</string>
     <string name="quiz_now_writing">Now writing</string>
     <string name="quiz_next_text_placeholder">Your next text</string>
@@ -181,7 +186,10 @@
     <string name="result_row_missed">Text %1$d, %2$s, missed</string>
     <string name="result_practice_again">Practice again</string>
     <string name="result_title">Results</string>
-    <string name="review_count" tools:ignore="PluralsCandidate">%1$d of %2$d missed</string>
+    <plurals name="review_count">
+        <item quantity="one">%1$d of %2$d missed</item>
+        <item quantity="other">%1$d of %2$d missed</item>
+    </plurals>
     <string name="review_next_missed">Next missed text</string>
     <string name="review_back_to_results">Back to results</string>
     <string name="review_back_to_round">Back to round</string>
@@ -202,7 +210,10 @@
     <string name="history_row_action">Show round</string>
     <string name="round_kicker">%1$s · readers %2$s</string>
     <string name="round_topic_skill">%1$s · %2$s</string>
-    <string name="round_review_missed" tools:ignore="PluralsCandidate">Review %1$d missed</string>
+    <plurals name="round_review_missed">
+        <item quantity="one">Review %1$d missed</item>
+        <item quantity="other">Review %1$d missed</item>
+    </plurals>
     <string name="round_row_correct">Text %1$d, %2$s, %3$s, correct</string>
     <string name="round_row_missed">Text %1$d, %2$s, %3$s, missed</string>
     <string name="navigation_back">Back</string>

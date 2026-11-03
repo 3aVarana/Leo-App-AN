@@ -21,7 +21,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -42,6 +41,7 @@ import com.victorarana.leo.features.theme.LeoTextStyle
 import com.victorarana.leo.features.theme.LeoTheme
 import com.victorarana.leo.features.theme.LocalAnimatesPlaceholders
 import com.victorarana.leo.features.theme.rememberReduceMotion
+import com.victorarana.leo.features.theme.rememberResolvedLocale
 import com.victorarana.leo.features.theme.scaled
 import com.victorarana.leo.features.theme.toTextStyle
 import java.text.NumberFormat
@@ -142,7 +142,7 @@ private fun DownloadProgress(fraction: Float?) {
     val colors = LeoTheme.colors
     val description = stringResource(R.string.unavailable_download_progress)
     // The app's locale, like the strings around it (a per-app language can differ from the JVM default).
-    val locale = LocalConfiguration.current.locales[0]
+    val locale = rememberResolvedLocale()
     val percentFormat = remember(locale) { NumberFormat.getPercentInstance(locale) }
     // Capped at 99% below a whole download, so rounding never says 100% while it is still running. (Not rounded
     // down: a float such as 0.42 is just under it and would read 41%.)

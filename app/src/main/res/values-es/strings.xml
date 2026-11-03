@@ -1,5 +1,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Leo</string>
+    <!-- The language tag of these strings, for formatters (iOS Locale.current). A tag, not text to translate. -->
+    <string name="resource_locale">es</string>
     <string name="age_group_display_name_six">6 a 8</string>
     <string name="age_group_display_name_nine">9 a 11</string>
     <string name="age_group_display_name_twelve">12 a 14</string>
@@ -147,7 +149,11 @@
     <string name="quiz_start">Comenzar</string>
     <string name="quiz_topics_none">Sobre tus temas. Una pregunta después de cada uno.</string>
     <string name="quiz_topics_list">Sobre %1$s. Una pregunta después de cada uno.</string>
-    <string name="quiz_topics_more" tools:ignore="PluralsCandidate">Sobre %1$s y %2$d temas más de los tuyos. Una pregunta después de cada uno.</string>
+    <plurals name="quiz_topics_more">
+        <item quantity="one">Sobre %1$s y %2$d tema más de los tuyos. Una pregunta después de cada uno.</item>
+        <item quantity="many">Sobre %1$s y %2$d temas más de los tuyos. Una pregunta después de cada uno.</item>
+        <item quantity="other">Sobre %1$s y %2$d temas más de los tuyos. Una pregunta después de cada uno.</item>
+    </plurals>
     <string name="quiz_topic_separator">", "</string>
     <string name="quiz_now_writing">Escribiendo</string>
     <string name="quiz_next_text_placeholder">Tu próximo texto</string>
@@ -182,7 +188,11 @@
     <string name="result_row_missed">Texto %1$d, %2$s, fallada</string>
     <string name="result_practice_again">Practicar de nuevo</string>
     <string name="result_title">Resultados</string>
-    <string name="review_count" tools:ignore="PluralsCandidate">%1$d de %2$d falladas</string>
+    <plurals name="review_count">
+        <item quantity="one">%1$d de %2$d fallada</item>
+        <item quantity="many">%1$d de %2$d falladas</item>
+        <item quantity="other">%1$d de %2$d falladas</item>
+    </plurals>
     <string name="review_next_missed">Siguiente texto fallado</string>
     <string name="review_back_to_results">Volver a los resultados</string>
     <string name="review_back_to_round">Volver a la ronda</string>
@@ -204,7 +214,11 @@
     <string name="history_row_action">Ver la ronda</string>
     <string name="round_kicker">%1$s · lectores de %2$s</string>
     <string name="round_topic_skill">%1$s · %2$s</string>
-    <string name="round_review_missed" tools:ignore="PluralsCandidate">Repasar %1$d falladas</string>
+    <plurals name="round_review_missed">
+        <item quantity="one">Repasar %1$d fallada</item>
+        <item quantity="many">Repasar %1$d falladas</item>
+        <item quantity="other">Repasar %1$d falladas</item>
+    </plurals>
     <string name="round_row_correct">Texto %1$d, %2$s, %3$s, correcta</string>
     <string name="round_row_missed">Texto %1$d, %2$s, %3$s, fallada</string>
     <string name="navigation_back">Atrás</string>

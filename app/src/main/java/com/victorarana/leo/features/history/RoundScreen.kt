@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -38,6 +39,7 @@ import com.victorarana.leo.features.quiz.STACKED_ROW_FONT_SCALE
 import com.victorarana.leo.features.theme.LeoTextStyle
 import com.victorarana.leo.features.theme.LeoTheme
 import com.victorarana.leo.features.theme.LeoWeight
+import com.victorarana.leo.features.theme.rememberResolvedLocale
 import com.victorarana.leo.features.theme.toTextStyle
 import java.time.ZoneId
 
@@ -70,7 +72,7 @@ fun RoundScreen(
             } else {
                 {
                     LeoButton(
-                        text = stringResource(R.string.round_review_missed, misses.size),
+                        text = pluralStringResource(R.plurals.round_review_missed, misses.size, misses.size),
                         kind = LeoButtonKind.Secondary,
                         onClick = { onReview(0) },
                     )
@@ -97,7 +99,7 @@ private fun kickerText(
     round: RoundRecord,
     zone: ZoneId,
 ): String {
-    val locale = currentLocale()
+    val locale = rememberResolvedLocale()
     val is24Hour = rememberIs24HourClock()
     val dateTime =
         remember(round.finishedAt, zone, locale, is24Hour) { roundKicker(round.finishedAt, zone, locale, is24Hour) }
@@ -225,7 +227,7 @@ private fun RoundResultRow(
 
 @Composable
 private fun rememberNumber(number: Int): String {
-    val locale = currentLocale()
+    val locale = rememberResolvedLocale()
     return remember(number, locale) {
         java.text.NumberFormat
             .getIntegerInstance(locale)
