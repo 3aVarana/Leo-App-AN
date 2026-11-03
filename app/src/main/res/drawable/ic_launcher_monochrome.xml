@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The themed-icon layer (Android 13+): the same drawing as ic_launcher_foreground in one color, which the system
+    tints. Only its alpha counts. The spark has no outline here, so a hairline of ground stays between it and the pages.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.075"
+        android:scaleY="0.075"
+        android:translateX="15.6"
+        android:translateY="12.56">
+        <group android:translateY="51">
+            <path
+                android:fillColor="#000000"
+                android:fillType="evenOdd"
+                android:pathData="M190,450Q360,410 512,480L512,770Q360,710 190,750Z M238,535H462A30,30 0 0,1 462,595H238A30,30 0 0,1 238,535Z M238,615H412A30,30 0 0,1 412,675H238A30,30 0 0,1 238,615Z"
+                android:strokeColor="#000000"
+                android:strokeLineJoin="round"
+                android:strokeWidth="24" />
+            <path
+                android:fillColor="#000000"
+                android:fillType="evenOdd"
+                android:pathData="M834,450Q664,410 512,480L512,770Q664,710 834,750Z M562,535H786A30,30 0 0,1 786,595H562A30,30 0 0,1 562,535Z M562,615H736A30,30 0 0,1 736,675H562A30,30 0 0,1 562,615Z"
+                android:strokeColor="#000000"
+                android:strokeLineJoin="round"
+                android:strokeWidth="24" />
+        </group>
+        <group android:translateY="32">
+            <path
+                android:fillColor="#000000"
+                android:pathData="M512,240C520,320 560,352 632,360C560,368 520,400 512,480C504,400 464,368 392,360C464,352 504,320 512,240Z" />
+        </group>
+    </group>
+</vector>

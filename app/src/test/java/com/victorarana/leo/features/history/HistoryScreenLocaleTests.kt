@@ -5,6 +5,9 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import com.victorarana.leo.domain.AgeGroup
 import com.victorarana.leo.domain.RoundSummary
+import com.victorarana.leo.domain.roundAnswers
+import com.victorarana.leo.domain.roundRecordFixture
+import com.victorarana.leo.features.quiz.ReviewScreen
 import com.victorarana.leo.features.theme.LeoTheme
 import org.junit.Rule
 import org.junit.Test
@@ -16,7 +19,10 @@ import java.time.Instant
 import java.time.ZoneOffset
 import java.util.UUID
 
-/** Android only: the strings of History in Spanish and Brazilian Portuguese, with their plural forms. */
+/**
+ * Android only: the strings of History, Round and Review in Spanish and Brazilian Portuguese, with their plural
+ * forms.
+ */
 @RunWith(RobolectricTestRunner::class)
 class HistoryScreenLocaleTests {
     @get:Rule
@@ -67,5 +73,47 @@ class HistoryScreenLocaleTests {
     fun portuguesePlural() {
         show(2)
         composeRule.onNodeWithText("2 rodadas lidas", substring = true).assertIsDisplayed()
+    }
+
+    private fun showRoundWithOneMiss() =
+        composeRule.setContent {
+            LeoTheme {
+                RoundScreen(
+                    round = roundRecordFixture(AgeGroup.NINE, results = listOf(true, false, true, true, true, true)),
+                    onReview = {},
+                    onBack = {},
+                    zone = ZoneOffset.UTC,
+                )
+            }
+        }
+
+    @Test
+    @Config(qualifiers = "es")
+    fun spanishRoundReviewButtonAgreesWithOneMiss() {
+        showRoundWithOneMiss()
+        composeRule.onNodeWithText("Repasar 1 fallada").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "pt-rBR")
+    fun portugueseRoundReviewButtonAgreesWithOneMiss() {
+        showRoundWithOneMiss()
+        composeRule.onNodeWithText("Revisar 1 errada").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "es")
+    fun spanishReviewCountAgreesWithTheTotal() {
+        val misses = roundAnswers(listOf(true, false, true, true, true, true)).filterNot { it.isCorrect }
+        composeRule.setContent { LeoTheme { ReviewScreen(misses = misses, startIndex = 0, onBack = {}) } }
+        composeRule.onNodeWithText("1 de 1 fallada").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "pt-rBR")
+    fun portugueseReviewCountAgreesWithTheTotal() {
+        val misses = roundAnswers(listOf(true, false, false, true, true, true)).filterNot { it.isCorrect }
+        composeRule.setContent { LeoTheme { ReviewScreen(misses = misses, startIndex = 0, onBack = {}) } }
+        composeRule.onNodeWithText("1 de 2 erradas").assertIsDisplayed()
     }
 }

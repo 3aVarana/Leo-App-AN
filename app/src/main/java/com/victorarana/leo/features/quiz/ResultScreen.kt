@@ -18,7 +18,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -43,6 +42,7 @@ import com.victorarana.leo.features.preferences.Headline
 import com.victorarana.leo.features.theme.LeoTextStyle
 import com.victorarana.leo.features.theme.LeoTheme
 import com.victorarana.leo.features.theme.LeoWeight
+import com.victorarana.leo.features.theme.rememberResolvedLocale
 import com.victorarana.leo.features.theme.scaled
 import com.victorarana.leo.features.theme.toTextStyle
 import java.text.NumberFormat
@@ -242,6 +242,6 @@ private fun RowStatus(answer: RoundAnswer) {
 
 @Composable
 private fun rememberNumberFormat(): NumberFormat {
-    val locale = LocalConfiguration.current.locales[0]
+    val locale = rememberResolvedLocale()
     return remember(locale) { NumberFormat.getIntegerInstance(locale) }
 }

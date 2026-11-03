@@ -196,8 +196,9 @@ fun LeoTheme(
             colorScheme = colors.toMaterialColorScheme(darkTheme),
             typography = LeoMaterialTypography,
         ) {
-            // One "Remove animations" observer for the whole tree; components read it through the local.
-            ProvideReduceMotion(content)
+            // One "Remove animations" observer and one formatting locale for the whole tree; components read them
+            // through their locals.
+            ProvideReduceMotion { ProvideResolvedLocale(content) }
         }
     }
 }

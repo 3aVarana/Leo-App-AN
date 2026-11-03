@@ -75,7 +75,7 @@ class WelcomeScreenTests {
         composeRule.onNodeWithText("Tres textos breves, escritos para ti.").assertIsDisplayed()
         composeRule
             .onNodeWithText(
-                "Sobre Volcanes, Piratas, Cometas y 1 temas más de los tuyos. Una pregunta después de cada uno.",
+                "Sobre Volcanes, Piratas, Cometas y 1 tema más de los tuyos. Una pregunta después de cada uno.",
             ).assertIsDisplayed()
     }
 

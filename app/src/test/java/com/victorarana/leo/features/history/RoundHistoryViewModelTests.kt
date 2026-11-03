@@ -348,7 +348,15 @@ class RoundHistoryViewModelTests {
             val viewModel =
                 ViewModelProvider.create(
                     store,
-                    viewModelFactory { initializer { RoundHistoryViewModel(repository, storeScope()) } },
+                    viewModelFactory {
+                        initializer {
+                            RoundHistoryViewModel(
+                                repository,
+                                storeScope(),
+                                firstDayOfWeek = { DayOfWeek.MONDAY },
+                            )
+                        }
+                    },
                 )[RoundHistoryViewModel::class]
             viewModel.setAgeGroup(AgeGroup.NINE)
             advanceUntilIdle()
@@ -660,7 +668,15 @@ class RoundHistoryViewModelTests {
             val viewModel =
                 ViewModelProvider.create(
                     store,
-                    viewModelFactory { initializer { RoundHistoryViewModel(repository, storeScope()) } },
+                    viewModelFactory {
+                        initializer {
+                            RoundHistoryViewModel(
+                                repository,
+                                storeScope(),
+                                firstDayOfWeek = { DayOfWeek.MONDAY },
+                            )
+                        }
+                    },
                 )[RoundHistoryViewModel::class]
             viewModel.setAgeGroup(AgeGroup.NINE)
             val round = roundRecordFixture(AgeGroup.NINE)

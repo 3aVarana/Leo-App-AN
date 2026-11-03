@@ -63,7 +63,8 @@ fun AgeSegmentedControl(
 ) {
     SubcomposeLayout(modifier = modifier.fillMaxWidth()) { constraints ->
         val natural =
-            subcompose(AgeControlSlot.Fit) { Segments(selection, onSelect) }
+            // Measured, never placed: no semantics, so the options aren't in the tree twice.
+            subcompose(AgeControlSlot.Fit) { Box(Modifier.clearAndSetSemantics {}) { Segments(selection, onSelect) } }
                 .maxOf { it.measure(Constraints()).width }
         val width = if (constraints.hasBoundedWidth) constraints.maxWidth else natural
         val slot = if (natural <= width) AgeControlSlot.Segments else AgeControlSlot.Menu

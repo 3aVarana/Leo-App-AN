@@ -97,13 +97,15 @@ data class RoundHistoryUiState(
  * @param storeScope Runs the writes to the store (the save of a finished round, a delete), so they complete even if
  * the Activity finishes right after "See results" or a swipe (the application's scope in the app; phase-6 D6).
  * @param now The providers stand for `.autoupdatingCurrent`: read each time, so a change of zone or locale applies.
+ * @param firstDayOfWeek The device region's first weekday, from `localeFirstDayOfWeek(deviceLocale(context))`: the
+ * caller owns the `Context`, the ViewModel only asks.
  */
 class RoundHistoryViewModel(
     private val repository: RoundHistoryRepository,
     private val storeScope: CoroutineScope,
     private val now: () -> Instant = Instant::now,
     private val zone: () -> ZoneId = ZoneId::systemDefault,
-    private val firstDayOfWeek: () -> DayOfWeek = { localeFirstDayOfWeek() },
+    private val firstDayOfWeek: () -> DayOfWeek,
 ) : ViewModel() {
     private val mutableState = MutableStateFlow(RoundHistoryUiState(zone = zone()))
     val uiState: StateFlow<RoundHistoryUiState> = mutableState.asStateFlow()
@@ -213,10 +215,14 @@ class RoundHistoryViewModel(
     }
 
     private fun publish(change: RoundHistoryUiState.() -> RoundHistoryUiState) {
+        // Read once, outside `update`, whose lambda can run again under contention: `firstDayOfWeek` is a binder
+        // call on API 33+ (`deviceLocale`).
+        val zone = zone()
+        val now = now()
+        val firstDay = firstDayOfWeek()
         mutableState.update {
             val next = it.change()
-            val zone = zone()
-            next.copy(zone = zone, sections = sections(next.summaries, now(), zone, firstDayOfWeek()))
+            next.copy(zone = zone, sections = sections(next.summaries, now, zone, firstDay))
         }
     }
 

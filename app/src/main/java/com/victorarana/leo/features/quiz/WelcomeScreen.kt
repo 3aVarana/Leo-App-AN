@@ -12,7 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -35,6 +35,7 @@ import com.victorarana.leo.features.preferences.Headline
 import com.victorarana.leo.features.root.launchWordmarkTarget
 import com.victorarana.leo.features.theme.LeoTextStyle
 import com.victorarana.leo.features.theme.LeoTheme
+import com.victorarana.leo.features.theme.rememberResolvedLocale
 import com.victorarana.leo.features.theme.toTextStyle
 
 private const val HEADLINE_SIZE = 48f
@@ -112,7 +113,7 @@ fun WelcomeScreen(
  */
 @Composable
 private fun spelledOutCount(count: Int): String {
-    val locale = LocalConfiguration.current.locales[0]
+    val locale = rememberResolvedLocale()
     val words = stringArrayResource(R.array.quiz_spelled_out_counts)
     return remember(locale, count, words) {
         val sizes = RoundSettings.EXERCISE_COUNT_RANGE
@@ -125,7 +126,7 @@ private fun spelledOutCount(count: Int): String {
 /** Names up to three of this round's topics, and how many more there are. */
 @Composable
 private fun topicSentence(topicNames: List<String>): String {
-    val locale = LocalConfiguration.current.locales[0]
+    val locale = rememberResolvedLocale()
     val shown = topicNames.take(MAX_NAMED_TOPICS)
     val more = topicNames.size - shown.size
     return when {
@@ -136,8 +137,9 @@ private fun topicSentence(topicNames: List<String>): String {
                 remember(locale, shown) { ListFormatter.getInstance(locale).format(shown) },
             )
         else ->
-            stringResource(
-                R.string.quiz_topics_more,
+            pluralStringResource(
+                R.plurals.quiz_topics_more,
+                more,
                 shown.joinToString(stringResource(R.string.quiz_topic_separator)),
                 more,
             )

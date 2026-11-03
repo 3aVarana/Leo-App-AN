@@ -28,7 +28,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -42,6 +41,7 @@ import com.victorarana.leo.features.components.Kicker
 import com.victorarana.leo.features.theme.LeoTextStyle
 import com.victorarana.leo.features.theme.LeoTheme
 import com.victorarana.leo.features.theme.LeoWeight
+import com.victorarana.leo.features.theme.rememberResolvedLocale
 import com.victorarana.leo.features.theme.toTextStyle
 import kotlinx.coroutines.delay
 import java.util.Locale
@@ -126,7 +126,7 @@ fun ReadingTimer(
     val remaining = state.remaining
 
     val colors = LeoTheme.colors
-    val locale = LocalConfiguration.current.locales[0]
+    val locale = rememberResolvedLocale()
     val label = stringResource(R.string.quiz_time_left)
     val spoken = remember(remaining, locale) { spokenDuration(remaining, locale) }
     val fraction by animateFloatAsState(

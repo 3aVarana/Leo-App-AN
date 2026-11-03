@@ -63,6 +63,7 @@ import com.victorarana.leo.features.theme.LeoTheme
 import com.victorarana.leo.features.theme.LeoWeight
 import com.victorarana.leo.features.theme.leoReadableWidth
 import com.victorarana.leo.features.theme.leoScreenBackground
+import com.victorarana.leo.features.theme.rememberResolvedLocale
 import com.victorarana.leo.features.theme.scaled
 import com.victorarana.leo.features.theme.toTextStyle
 import kotlinx.coroutines.launch
@@ -110,7 +111,7 @@ fun HistoryScreen(
     LaunchedEffect(state.isLoaded, state.hasRounds) {
         if (state.isLoaded && !state.hasRounds) onEmpty()
     }
-    val locale = currentLocale()
+    val locale = rememberResolvedLocale()
     val is24Hour = rememberIs24HourClock()
     Column(
         modifier
@@ -151,7 +152,7 @@ fun HistoryScreen(
 
 @Composable
 private fun Header(state: RoundHistoryUiState) {
-    val locale = currentLocale()
+    val locale = rememberResolvedLocale()
     val percent = remember(state.correctShare, locale) { percentText(state.correctShare, locale) }
     Column(
         Modifier.leoReadableWidth().padding(top = 20.dp, bottom = 28.dp),
@@ -254,7 +255,7 @@ private fun HistoryRow(
     onOpen: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    val locale = currentLocale()
+    val locale = rememberResolvedLocale()
     val date = remember(summary.finishedAt, zone, locale) { rowDate(summary.finishedAt, zone, locale) }
     val time =
         remember(summary.finishedAt, zone, locale, is24Hour) { rowTime(summary.finishedAt, zone, locale, is24Hour) }
