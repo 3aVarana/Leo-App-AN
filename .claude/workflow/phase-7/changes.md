@@ -114,3 +114,9 @@ Commands after the fixes: `./gradlew assembleDebug` BUILD SUCCESSFUL; `./gradlew
 - **`RoundHistoryUiState` is `@Immutable`**, so History can skip recomposing for an equal state (`ZoneId` is unstable to Compose).
 - **Not changed: `openedRound` isn't cleared.** It is one round, replaced by the next tap; clearing it on History's resume could race the round page's exit transition, which still reads it, and make it load again.
 - **Not changed: restore order.** Both sides already sort newest first by `finishedAt` and point at each other (fifth review). Rounds with the same `finishedAt` to the millisecond are not a realistic case for rounds a reader finishes one at a time.
+
+## Review notes (PR #12 eighth review)
+
+- **A second delete of a round already being deleted is ignored** (a swipe and the TalkBack action at once), so the first to finish can't let a load show the row while the other runs. Test `aSecondDeleteOfTheSameRoundWhileTheFirstWaitsIsIgnored`.
+- **Not changed: load-then-navigate in the destination.** Navigation is the destination's job here as in phases 4-6 (`dropUnlessResumed`, RESUMED checks); the ViewModel only loads. A rotation mid-load drops that one tap (the reader taps again); a one-shot "opened" event in the ViewModel is a pattern the app doesn't use elsewhere. Revisit with the user if wanted.
+- **Not changed, already answered:** `openedRound` isn't cleared and the restore order (seventh and fifth reviews above).

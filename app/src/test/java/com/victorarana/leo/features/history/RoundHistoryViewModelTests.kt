@@ -608,6 +608,28 @@ class RoundHistoryViewModelTests {
             assertTrue(viewModel.state.isLoaded)
         }
 
+    /** Android only: a swipe and the TalkBack action on one row make one delete, not two. */
+    @Test
+    fun aSecondDeleteOfTheSameRoundWhileTheFirstWaitsIsIgnored() =
+        runTest {
+            val viewModel = makeViewModel(march20)
+            setAgeGroup(viewModel, AgeGroup.NINE)
+            val round = roundRecordFixture(AgeGroup.NINE, finishedAt = date(2026, 3, 18))
+            record(viewModel, round)
+            val gate = CompletableDeferred<Unit>().also { repository.deleteGates[round.id] = it }
+
+            viewModel.delete(round.id)
+            runCurrent()
+            viewModel.delete(round.id)
+            runCurrent()
+            assertEquals(1, repository.deleteCalls)
+
+            gate.complete(Unit)
+            advanceUntilIdle()
+            assertEquals(1, repository.deleteCalls)
+            assertFalse(viewModel.state.hasRounds)
+        }
+
     /** Android only: the reload after a save, landing while a delete waits, mustn't bring the deleted row back. */
     @Test
     fun aSaveDuringADeleteDoesntBringTheRowBack() =

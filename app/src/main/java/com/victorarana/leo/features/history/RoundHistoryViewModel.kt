@@ -152,6 +152,9 @@ class RoundHistoryViewModel(
      * rounds and closes History, like any failed load, as on iOS (`reload()` sets `summaries = []`).
      */
     fun delete(id: UUID) {
+        // Already on its way (a swipe and the TalkBack action at once): a second call would end first and let a load
+        // show the row while the first is still running.
+        if (id in pendingDeletes) return
         val ageGroup = mutableState.value.ageGroup
         val removed = mutableState.value.summaries.firstOrNull { it.id == id }
         pendingDeletes += id
