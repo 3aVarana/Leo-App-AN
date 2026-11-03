@@ -30,8 +30,8 @@ import com.victorarana.leo.features.quiz.ReviewScreen
 import com.victorarana.leo.features.theme.rememberReduceMotion
 
 /**
- * The graph of the onboarded app: Home (the quiz), with Review, Settings and History pushed over it. Back from
- * History pops (iOS: the `NavigationStack`). History's placeholder is replaced in phase 7.
+ * The graph of the onboarded app: Home (the quiz), with Review, Settings and History (then a round, then its
+ * Review) pushed over it. Back pops (iOS: the `NavigationStack`).
  *
  * @param navController Owned by the caller, above the gates, so the back stack outlives this graph leaving
  * composition (see `RootScreen`).
@@ -44,6 +44,12 @@ fun LeoNavHost(
 ) {
     // The sheet's slide, none when the reader asked for no motion.
     val reduceMotion = rememberReduceMotion()
+    val state by root.uiState.collectAsStateWithLifecycle()
+    val preferences = (state.preferences as? PreferencesState.Ready)?.preferences
+    // Prepares a round on launch, after onboarding and whenever settings are saved (iOS `.task(id: roundSettings)`),
+    // and points History at the age group. Above the graph, not in Home, so a restored History (Home isn't composed
+    // under it) still gets its age group. The quiz keeps the round it has when the settings are the same.
+    LaunchedEffect(preferences) { root.preferencesDidChange() }
     NavHost(navController = navController, startDestination = LeoRoute.Home, modifier = modifier) {
         // A sheet or a pushed page leaves its presenter still: Home neither fades out under Settings or Review nor
         // fades back in as they close, and stays composed (motionless) until the slide ends, not removed at once as
@@ -56,11 +62,11 @@ fun LeoNavHost(
                 if (initialState.destination.isOverHome()) EnterTransition.None else null
             },
         ) {
-            val state by root.uiState.collectAsStateWithLifecycle()
-            val preferences = (state.preferences as? PreferencesState.Ready)?.preferences
-            // Prepares a round on launch, after onboarding and whenever settings are saved (iOS
-            // `.task(id: preferences.roundSettings)`). The quiz keeps the round it has when the settings are the same.
-            LaunchedEffect(preferences) { root.preferencesDidChange() }
+            // The entry button is shown only when there is a saved round to show (iOS `historyAction`, H6).
+            val hasRounds =
+                root.history.uiState
+                    .collectAsStateWithLifecycle()
+                    .value.hasRounds
             if (preferences != null) {
                 // `dropUnlessResumed` reads the entry's lifecycle, so it is made here, not above the NavHost: a tap
                 // while the entry is leaving RESUMED (a second tap during an exit animation) is dropped. A second
@@ -71,6 +77,7 @@ fun LeoNavHost(
                     quiz = root.quiz,
                     preferences = preferences,
                     onSettings = dropUnlessResumed { navController.navigate(LeoRoute.Settings) },
+                    onHistory = if (hasRounds) dropUnlessResumed { navController.navigate(LeoRoute.History) } else null,
                     onReview = { index ->
                         if (owner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
                             navController.navigate(LeoRoute.Review(index))
@@ -99,7 +106,7 @@ fun LeoNavHost(
                 )
             }
         }
-        composable<LeoRoute.History> { HistoryPlaceholder() }
+        historyDestinations(navController, root.history, reduceMotion)
         composable<LeoRoute.Settings>(
             enterTransition = { if (reduceMotion) EnterTransition.None else slideInVertically { it } },
             popExitTransition = { if (reduceMotion) ExitTransition.None else slideOutVertically { it } },
@@ -130,4 +137,9 @@ fun LeoNavHost(
 }
 
 /** The destinations that open over Home and leave it where it is. */
-private fun NavDestination.isOverHome(): Boolean = hasRoute<LeoRoute.Settings>() || hasRoute<LeoRoute.Review>()
+private fun NavDestination.isOverHome(): Boolean =
+    hasRoute<LeoRoute.Settings>() ||
+        hasRoute<LeoRoute.Review>() ||
+        hasRoute<LeoRoute.History>() ||
+        hasRoute<LeoRoute.HistoryRound>() ||
+        hasRoute<LeoRoute.HistoryReview>()

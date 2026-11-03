@@ -1,6 +1,7 @@
 package com.victorarana.leo.support
 
 import com.victorarana.leo.domain.AgeGroup
+import com.victorarana.leo.domain.RoundRecord
 import com.victorarana.leo.domain.RoundSettings
 import com.victorarana.leo.domain.topic
 import com.victorarana.leo.features.quiz.QuizUiState
@@ -34,7 +35,10 @@ fun QuizViewModel.answer(correctly: Boolean) {
 }
 
 /** Makes a quiz over a factory spy, the way each Swift suite's `makeQuiz` does. */
-fun makeQuiz(spy: ExerciseRepositoryFactorySpy): QuizViewModel = QuizViewModel(makeRepository = { spy.make(it) })
+fun makeQuiz(
+    spy: ExerciseRepositoryFactorySpy,
+    onRoundFinished: (RoundRecord) -> Unit = {},
+): QuizViewModel = QuizViewModel(makeRepository = { spy.make(it) }, onRoundFinished = onRoundFinished)
 
 /** A quiz whose repository never answers, for tests of the screens around it. */
 fun testQuiz(spy: ExerciseRepositoryFactorySpy = ExerciseRepositoryFactorySpy()): QuizViewModel = makeQuiz(spy)

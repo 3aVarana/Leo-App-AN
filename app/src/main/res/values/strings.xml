@@ -184,12 +184,28 @@
     <string name="review_count" tools:ignore="PluralsCandidate">%1$d of %2$d missed</string>
     <string name="review_next_missed">Next missed text</string>
     <string name="review_back_to_results">Back to results</string>
-    <!-- Used by the History round page in phase 7 (ReviewScreen's backTitle). -->
-    <string name="review_back_to_round" tools:ignore="UnusedResources">Back to round</string>
+    <string name="review_back_to_round">Back to round</string>
     <string name="review_kicker">Text %1$d · %2$s</string>
     <string name="review_you">You</string>
     <string name="review_answer">Answer</string>
     <string name="review_from_the_text">From the text</string>
+    <string name="history_title">Your rounds</string>
+    <plurals name="history_summary">
+        <item quantity="one">%1$d round read · %2$s answered right</item>
+        <item quantity="other">%1$d rounds read · %2$s answered right</item>
+    </plurals>
+    <string name="history_this_week">This week</string>
+    <string name="history_last_week">Last week</string>
+    <string name="history_earlier_in">Earlier in %1$s</string>
+    <string name="history_delete">Delete</string>
+    <string name="history_row_accessibility" tools:ignore="PluralsCandidate">%1$s, %2$s, %3$d of %4$d right</string>
+    <string name="history_row_action">Show round</string>
+    <string name="round_kicker">%1$s · readers %2$s</string>
+    <string name="round_topic_skill">%1$s · %2$s</string>
+    <string name="round_review_missed" tools:ignore="PluralsCandidate">Review %1$d missed</string>
+    <string name="round_row_correct">Text %1$d, %2$s, %3$s, correct</string>
+    <string name="round_row_missed">Text %1$d, %2$s, %3$s, missed</string>
+    <string name="navigation_back">Back</string>
     <!-- The round sizes 3 to 9, spelled out in order. ICU's spell-out rules are not in the Android SDK. -->
     <string-array name="quiz_spelled_out_counts">
         <item>three</item>

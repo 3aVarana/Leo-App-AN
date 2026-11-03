@@ -3,9 +3,11 @@ package com.victorarana.leo.features.root
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -14,11 +16,15 @@ import com.victorarana.leo.domain.ModelAvailability
 import com.victorarana.leo.domain.ModelUnavailableReason
 import com.victorarana.leo.domain.TopicNames
 import com.victorarana.leo.domain.readerPreferencesFixture
+import com.victorarana.leo.domain.roundRecordFixture
 import com.victorarana.leo.features.theme.LeoTheme
 import com.victorarana.leo.support.PreferencesRepositorySpy
+import com.victorarana.leo.support.RoundHistoryRepositorySpy
 import com.victorarana.leo.support.StubModelAvailabilityProvider
 import com.victorarana.leo.support.StubTopicReviewRepository
+import com.victorarana.leo.support.testHistory
 import com.victorarana.leo.support.testQuiz
+import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -34,12 +40,19 @@ class RootScreenTests {
     private val availability = StubModelAvailabilityProvider()
     private val preferences = readerPreferencesFixture(AgeGroup.NINE)
 
+    private val history = RoundHistoryRepositorySpy()
+
     private fun show() {
         // The intro blocks taps while it plays; these tests are about the gates.
         val viewModel =
-            RootViewModel(repository, availability, StubTopicReviewRepository(), TopicNames.English, testQuiz()).apply {
-                onIntroPlayed()
-            }
+            RootViewModel(
+                repository,
+                availability,
+                StubTopicReviewRepository(),
+                TopicNames.English,
+                testQuiz(),
+                testHistory(history),
+            ).apply { onIntroPlayed() }
         composeRule.setContent { LeoTheme { RootScreen(viewModel) } }
         composeRule.waitForIdle()
     }
@@ -123,6 +136,36 @@ class RootScreenTests {
         composeRule.onNodeWithText("Continue").assertIsEnabled()
     }
 
-    // `homeNavigatesToHistoryAndBackPops` moves to phase 7: with no saved round the History buttons are hidden
-    // (phase-6 Q3), so Home has no way to History until `RoundHistoryViewModel.hasRounds` exists.
+    /** With a saved round, Home's History button opens History, and back pops to Home (iOS: `isShowingHistory`). */
+    @Test
+    fun homeNavigatesToHistoryAndBackPops() {
+        repository.stored = preferences
+        runBlocking { history.save(roundRecordFixture(AgeGroup.NINE)) }
+        show()
+        composeRule.onNodeWithContentDescription("Past rounds").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Your rounds").assertIsDisplayed()
+
+        composeRule.runOnUiThread { composeRule.activity.onBackPressedDispatcher.onBackPressed() }
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Start").assertIsDisplayed()
+    }
+
+    /** H6: nothing to show yet, no button. */
+    @Test
+    fun historyButtonHiddenWithoutRounds() {
+        repository.stored = preferences
+        show()
+        composeRule.onNodeWithText("Start").assertIsDisplayed()
+        composeRule.onAllNodesWithContentDescription("Past rounds").assertCountEquals(0)
+    }
+
+    /** Rounds of another age group don't count: the button follows the current preferences. */
+    @Test
+    fun historyButtonIgnoresRoundsOfAnotherAgeGroup() {
+        repository.stored = preferences
+        runBlocking { history.save(roundRecordFixture(AgeGroup.TWELVE)) }
+        show()
+        composeRule.onAllNodesWithContentDescription("Past rounds").assertCountEquals(0)
+    }
 }

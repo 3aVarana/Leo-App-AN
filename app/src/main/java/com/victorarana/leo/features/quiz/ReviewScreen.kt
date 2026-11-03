@@ -2,8 +2,6 @@ package com.victorarana.leo.features.quiz
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -19,11 +16,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -32,11 +26,11 @@ import androidx.compose.ui.unit.dp
 import com.victorarana.leo.R
 import com.victorarana.leo.domain.RoundAnswer
 import com.victorarana.leo.features.components.AnswerRow
+import com.victorarana.leo.features.components.BackBar
 import com.victorarana.leo.features.components.Kicker
 import com.victorarana.leo.features.components.LeoBottomBar
 import com.victorarana.leo.features.components.LeoButton
 import com.victorarana.leo.features.components.LeoButtonKind
-import com.victorarana.leo.features.components.LeoIcon
 import com.victorarana.leo.features.components.OptionState
 import com.victorarana.leo.features.components.displayNameRes
 import com.victorarana.leo.features.theme.LeoTextStyle
@@ -44,16 +38,14 @@ import com.victorarana.leo.features.theme.LeoTheme
 import com.victorarana.leo.features.theme.leoReadableWidth
 import com.victorarana.leo.features.theme.leoScreenBackground
 import com.victorarana.leo.features.theme.rememberReduceMotion
-import com.victorarana.leo.features.theme.scaled
 import com.victorarana.leo.features.theme.toTextStyle
 import kotlinx.coroutines.launch
 
 private const val CALLOUT = 16f
-private const val BODY = 17f
 
 /**
  * The texts the reader missed, one page each: their answer, the right one, why, and the text. Port of `ReviewView`.
- * Reused by History in phase 7.
+ * The round page of History reuses it.
  *
  * @param startIndex The position in [misses] to open at.
  * @param backTitle The bottom button's label once every miss has been seen. "Back to round" from the round page.
@@ -79,7 +71,11 @@ fun ReviewScreen(
             .leoScreenBackground()
             .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)),
     ) {
-        TopBar(parentTitle = parentTitle, position = selection + 1, count = misses.size, onBack = onBack)
+        BackBar(
+            parentTitle = parentTitle,
+            onBack = onBack,
+            trailing = stringResource(R.string.review_count, selection + 1, misses.size),
+        )
         HorizontalPager(state = pagerState, modifier = Modifier.weight(1f).fillMaxWidth()) { page ->
             ReviewPage(misses[page])
         }
@@ -102,37 +98,6 @@ fun ReviewScreen(
                 LeoButton(text = backTitle, kind = LeoButtonKind.Primary, onClick = onBack)
             }
         }
-    }
-}
-
-/** The back arrow with the title of the screen below on the left, "2 of 3 missed" on the right. */
-@Composable
-private fun TopBar(
-    parentTitle: String,
-    position: Int,
-    count: Int,
-    onBack: () -> Unit,
-) {
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        LeoButton(kind = LeoButtonKind.Ghost, onClick = onBack) {
-            LeoIcon(
-                id = R.drawable.ic_arrow_back,
-                tint = LocalContentColor.current,
-                size = 24.dp.scaled(relativeTo = BODY),
-            )
-            Spacer(Modifier.width(4.dp))
-            Text(parentTitle, maxLines = 1)
-        }
-        Spacer(Modifier.weight(1f))
-        BasicText(
-            text = stringResource(R.string.review_count, position, count),
-            modifier = Modifier.padding(horizontal = 8.dp),
-            style = LeoTextStyle.caption.toTextStyle().copy(color = LeoTheme.colors.inkSoft),
-            softWrap = false,
-        )
     }
 }
 

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Material Symbols (Outlined, weight 400, 24px): the path of the published chevron_right_24px.svg, reproduced here, not
+    copied from the file; the other icons are weight 500. Swap in chevron_right_wght500_24px.svg when a download is possible.
+    Apache 2.0, see assets/licenses/Apache-2.0-MaterialSymbols.md.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="960"
+    android:viewportHeight="960">
+    <group android:translateY="960">
+        <path
+            android:fillColor="#FF000000"
+            android:pathData="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z" />
+    </group>
+</vector>
