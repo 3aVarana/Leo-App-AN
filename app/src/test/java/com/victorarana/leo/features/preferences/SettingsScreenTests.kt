@@ -15,6 +15,7 @@ import com.victorarana.leo.features.theme.LeoTheme
 import com.victorarana.leo.support.PreferencesRepositorySpy
 import com.victorarana.leo.support.StubModelAvailabilityProvider
 import com.victorarana.leo.support.StubTopicReviewRepository
+import com.victorarana.leo.support.testQuiz
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -35,15 +36,20 @@ class SettingsScreenTests {
     @Before
     fun setUp() {
         val root =
-            RootViewModel(repository, StubModelAvailabilityProvider(), StubTopicReviewRepository(), TopicNames.English)
-                .apply { onIntroPlayed() }
+            RootViewModel(
+                repository,
+                StubModelAvailabilityProvider(),
+                StubTopicReviewRepository(),
+                TopicNames.English,
+                testQuiz(),
+            ).apply { onIntroPlayed() }
         composeRule.setContent { LeoTheme { RootScreen(root) } }
         composeRule.waitForIdle()
-        composeRule.onNodeWithText("Open settings").performClick()
+        composeRule.onNodeWithContentDescription("Settings").performClick()
         composeRule.waitForIdle()
     }
 
-    private fun assertOnHome() = composeRule.onNodeWithText("Home placeholder (phase 6)").assertIsDisplayed()
+    private fun assertOnHome() = composeRule.onNodeWithText("Start").assertIsDisplayed()
 
     @Test
     fun opensWithTheCurrentPreferences() {
@@ -61,7 +67,7 @@ class SettingsScreenTests {
         assertTrue(repository.saved.isEmpty())
 
         // A new opening starts from the saved preferences again.
-        composeRule.onNodeWithText("Open settings").performClick()
+        composeRule.onNodeWithContentDescription("Settings").performClick()
         composeRule.waitForIdle()
         composeRule.onNodeWithText("Done").performClick()
         composeRule.waitForIdle()
@@ -93,8 +99,8 @@ class SettingsScreenTests {
         composeRule.onNodeWithText("Cancel").performClick()
         composeRule.waitForIdle()
         composeRule.mainClock.autoAdvance = false
-        composeRule.onNodeWithText("Open settings").performClick()
-        composeRule.onNodeWithText("Open settings").performClick()
+        composeRule.onNodeWithContentDescription("Settings").performClick()
+        composeRule.onNodeWithContentDescription("Settings").performClick()
         composeRule.mainClock.autoAdvance = true
         composeRule.waitForIdle()
         composeRule.onNodeWithText("Cancel").performClick()
@@ -108,10 +114,10 @@ class SettingsScreenTests {
         composeRule.onNodeWithText("Cancel").performClick()
         composeRule.waitForIdle()
         composeRule.mainClock.autoAdvance = false
-        composeRule.onNodeWithText("Open settings").performClick()
+        composeRule.onNodeWithContentDescription("Settings").performClick()
         composeRule.mainClock.advanceTimeBy(100)
         composeRule.onNodeWithText("Settings").assertExists()
-        composeRule.onNodeWithText("Home placeholder (phase 6)").assertExists()
+        composeRule.onNodeWithText("Start").assertExists()
     }
 
     @Test

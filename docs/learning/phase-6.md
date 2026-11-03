@@ -1,0 +1,19 @@
+# Phase 6: quiz
+
+**A ViewModel owned by another ViewModel (iOS: `RootViewModel` holds `quiz` as a property).** `QuizViewModel` is a real `ViewModel` in the Activity's store, built in `MainActivity` and passed to `RootViewModel`. So a rotation keeps the round and its generation, and when the Activity finishes the store is cleared and `viewModelScope` cancels the model call. iOS has no equivalent of that cleanup because the app object never goes away (`MainActivity.kt`, `QuizViewModel.kt`).
+
+**`StateFlow<UiState>` that is rebuilt on purpose (iOS: `@Observable` properties).** The Swift ViewModel mutates ten properties and SwiftUI tracks each read. Here the private fields change as in Swift, and one `publish()` after every action and generation step builds a single immutable `QuizUiState`. The derived values (`optionState(i)`, `dotState(i)`, `misses`) are members of that state, so a screen reads one consistent snapshot (`QuizViewModel.kt`).
+
+**`AnimatedContent` with a content key (iOS: `.animation(.default, value: phase)`).** Crossfading on the whole state would fade between two screens on every picked option. Keyed by `phase`, the screen changes in place within a phase and cross-fades between phases, and a fading-out screen keeps the state it had, so Exercise never draws with a null exercise. The old screen stays composed and tappable while it fades, so `QuizScreen` ignores its callbacks once it is no longer current (`QuizScreen.kt`).
+
+**Lifecycle-aware countdown (iOS: `.task(id: scenePhase == .active)`).** `repeatOnLifecycle(RESUMED)` inside a `LaunchedEffect` runs the loop only while the screen's back-stack entry is resumed, and restarts it on return. The seconds left are `rememberSaveable`, keyed by the exercise, so rotation keeps them. Tests drive it with the Compose `mainClock` and a lifecycle of their own (`ReadingTimer.kt`, `ReadingTimerTests.kt`).
+
+**App-level pause and resume (iOS: nothing).** On-device inference is refused from the background, so `RootScreen` calls `quiz.pause()` on `ON_STOP` and `quiz.resume()` on `ON_START`. The generation job is cancelled without counting a failure, and an `isPaused` flag keeps a round prepared in the background from starting (`RootScreen.kt`, `QuizViewModel.kt`).
+
+**Application scope for fire-and-forget work (iOS: `Task { }` in an object that lives for the whole app).** Saving the finished round must survive the Activity finishing right after "See results", so `RoundHistoryRecorder` launches on `AppContainer.applicationScope` (`SupervisorJob() + Dispatchers.Main`), not on a ViewModel's scope (`RoundHistoryRecorder.kt`, `AppContainer.kt`).
+
+**Cancellation that is not yours (iOS: `CancellationError` ends the loop).** A `CancellationException` can also come out of the repository itself, for example a timed-out future. The loop checks its own `isActive`: cancelled means stop; still active means the exercise failed and is replaced or kept for retry (`QuizViewModel.kt`, `generate`).
+
+**Semantics replace accessibility traits, values and hints (iOS: `.accessibilityValue`, `.accessibilityHint`, `AccessibilityNotification`).** An option clears its children's semantics and sets one node: `contentDescription` is the text, `stateDescription` the state, and it has no click action once answered. The Loading heading is one node with `liveRegion = Polite`, which TalkBack re-announces when the topic changes. A missed Results row labels its click action "Review", which TalkBack reads as "double tap to Review" (`ExerciseScreen.kt`, `LoadingScreen.kt`, `ResultScreen.kt`).
+
+**Pager and navigation for Review (iOS: `TabView(.page)` and `navigationDestination`).** `HorizontalPager` comes with Compose foundation, so no new dependency. Review is its own `@Serializable` route that carries only the start index; the misses come from the ViewModel, and a restored route with nothing to show pops at once (`ReviewScreen.kt`, `LeoNavHost.kt`).

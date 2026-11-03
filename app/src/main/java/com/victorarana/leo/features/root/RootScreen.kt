@@ -1,5 +1,6 @@
 package com.victorarana.leo.features.root
 
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,6 +38,16 @@ fun RootScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     // Back from another app, the model may have been downloaded or switched off meanwhile.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onResume() }
+    // On-device inference is refused from the background: stop writing when the app leaves the screen and go on
+    // when it returns, instead of failing every topic of the round (phase-6 D7).
+    // A configuration change (rotation, dark mode, font size) also stops the old Activity, but the ViewModel survives
+    // it and the new Activity starts again at once: pausing would cancel the Gemini Nano request and write the same
+    // text from scratch. Only a real departure pauses; the new Activity's `resume()` is then a no-op.
+    val activity = LocalActivity.current
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
+        if (activity?.isChangingConfigurations != true) viewModel.quiz.pause()
+    }
+    LifecycleEventEffect(Lifecycle.Event.ON_START) { viewModel.quiz.resume() }
     // Above the gates, so a check that briefly reports the model unavailable keeps the back stack and the
     // destinations' ViewModels. `rememberSaveable` state inside destinations still resets when the graph leaves
     // composition, so anything that must survive this (a round in progress) belongs in a ViewModel.

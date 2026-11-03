@@ -142,4 +142,63 @@
     <string name="settings_reset">Redefinir</string>
     <string name="texts_per_round">Textos por rodada</string>
     <string name="texts_per_round_caption">Quantos textos curtos cada rodada tem, com uma pergunta depois de cada um.</string>
+    <string name="quiz_welcome_headline">%1$s textos curtos, escritos para você.</string>
+    <string name="quiz_welcome_kicker">A rodada de hoje · leitores de %1$s</string>
+    <string name="quiz_start">Começar</string>
+    <string name="quiz_topics_none">Sobre os seus temas. Uma pergunta depois de cada um.</string>
+    <string name="quiz_topics_list">Sobre %1$s. Uma pergunta depois de cada um.</string>
+    <string name="quiz_topics_more" tools:ignore="PluralsCandidate">Sobre %1$s e mais %2$d dos seus temas. Uma pergunta depois de cada um.</string>
+    <string name="quiz_topic_separator">", "</string>
+    <string name="quiz_now_writing">Escrevendo</string>
+    <string name="quiz_next_text_placeholder">Seu próximo texto</string>
+    <string name="quiz_loading_message">Um texto de %1$d palavras para leitores de %2$s. Normalmente fica pronto em poucos segundos.</string>
+    <string name="quiz_loading_accessibility">Escrevendo o texto %1$d de %2$d, sobre %3$s</string>
+    <string name="quiz_failed_kicker" tools:ignore="PluralsCandidate">O texto %1$d não saiu</string>
+    <string name="quiz_failed_title">Não conseguimos escrever este.</string>
+    <string name="quiz_failed_topic">Algo deu errado ao escrever seu texto sobre %1$s.</string>
+    <string name="quiz_failed_generic">Algo deu errado ao escrever seu texto.</string>
+    <string name="quiz_failed_saved_one">Sua resposta ao texto 1 está salva: nada se perde.</string>
+    <string name="quiz_failed_saved_many">Suas respostas até agora estão salvas: nada se perde.</string>
+    <string name="quiz_try_again">Tentar novamente</string>
+    <string name="quiz_try_different_topic">Tentar outro tema</string>
+    <string name="quiz_answer_question">Responder à pergunta</string>
+    <string name="quiz_next_text">Próximo texto</string>
+    <string name="quiz_see_results">Ver resultados</string>
+    <string name="quiz_correct_verdict">Correto!</string>
+    <string name="quiz_not_quite">Não exatamente</string>
+    <string name="quiz_your_answer">Sua resposta</string>
+    <string name="quiz_correct_answer">Resposta correta</string>
+    <string name="quiz_your_answer_incorrect">Sua resposta, incorreta</string>
+    <string name="quiz_time_to_read">Tempo de leitura</string>
+    <string name="quiz_time_left">Tempo restante para ler</string>
+    <string name="result_kicker">Rodada concluída · leitores de %1$s</string>
+    <string name="result_score">%1$d de %2$d</string>
+    <string name="result_perfect">Pontuação perfeita! Você entendeu todos os textos.</string>
+    <string name="result_great">Ótima leitura! Você está prestando muita atenção.</string>
+    <string name="result_good">Bom trabalho. Continue praticando para aprimorar sua compreensão.</string>
+    <string name="result_keep_going">Continue! Leia cada texto com calma e procure as ideias principais.</string>
+    <string name="result_correct">Correta</string>
+    <string name="result_row_correct">Texto %1$d, %2$s, correta</string>
+    <string name="result_row_missed">Texto %1$d, %2$s, errada</string>
+    <string name="result_practice_again">Praticar de novo</string>
+    <string name="result_title">Resultados</string>
+    <string name="review_count" tools:ignore="PluralsCandidate">%1$d de %2$d erradas</string>
+    <string name="review_next_missed">Próximo texto errado</string>
+    <string name="review_back_to_results">Voltar aos resultados</string>
+    <!-- Used by the History round page in phase 7 (ReviewScreen's backTitle). -->
+    <string name="review_back_to_round" tools:ignore="UnusedResources">Voltar à rodada</string>
+    <string name="review_kicker">Texto %1$d · %2$s</string>
+    <string name="review_you">Você</string>
+    <string name="review_answer">Resposta</string>
+    <string name="review_from_the_text">Do texto</string>
+    <!-- The round sizes 3 to 9, spelled out in order. ICU's spell-out rules are not in the Android SDK. -->
+    <string-array name="quiz_spelled_out_counts">
+        <item>três</item>
+        <item>quatro</item>
+        <item>cinco</item>
+        <item>seis</item>
+        <item>sete</item>
+        <item>oito</item>
+        <item>nove</item>
+    </string-array>
 </resources>

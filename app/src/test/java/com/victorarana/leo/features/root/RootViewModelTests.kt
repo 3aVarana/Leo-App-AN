@@ -5,9 +5,13 @@ import com.victorarana.leo.domain.ModelAvailability
 import com.victorarana.leo.domain.ModelUnavailableReason
 import com.victorarana.leo.domain.TopicNames
 import com.victorarana.leo.domain.readerPreferencesFixture
+import com.victorarana.leo.features.quiz.QuizViewModel
+import com.victorarana.leo.support.ExerciseRepositoryFactorySpy
 import com.victorarana.leo.support.PreferencesRepositorySpy
 import com.victorarana.leo.support.StubModelAvailabilityProvider
 import com.victorarana.leo.support.StubTopicReviewRepository
+import com.victorarana.leo.support.state
+import com.victorarana.leo.support.testQuiz
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -29,6 +33,7 @@ class RootViewModelTests {
     private val preferences = readerPreferencesFixture(AgeGroup.NINE, custom = mapOf(AgeGroup.NINE to listOf("Chess")))
     private val repository = PreferencesRepositorySpy()
     private val availability = StubModelAvailabilityProvider()
+    private val factory = ExerciseRepositoryFactorySpy()
 
     @Before
     fun setUp() = Dispatchers.setMain(StandardTestDispatcher())
@@ -42,6 +47,7 @@ class RootViewModelTests {
             availability,
             StubTopicReviewRepository(),
             TopicNames.English,
+            testQuiz(factory),
         ).also { advanceUntilIdle() }
 
     private val RootViewModel.preferencesState get() = uiState.value.preferences
@@ -59,7 +65,8 @@ class RootViewModelTests {
     fun loadingStateBeforePreferencesLoad() =
         runTest {
             repository.stored = preferences
-            val root = RootViewModel(repository, availability, StubTopicReviewRepository(), TopicNames.English)
+            val root =
+                RootViewModel(repository, availability, StubTopicReviewRepository(), TopicNames.English, testQuiz())
             assertEquals(PreferencesState.Loading, root.preferencesState)
             advanceUntilIdle()
             assertEquals(PreferencesState.Ready(preferences), root.preferencesState)
@@ -84,6 +91,36 @@ class RootViewModelTests {
             advanceUntilIdle()
             assertEquals(emptyList<Any>(), repository.saved)
             assertEquals(PreferencesState.Ready(preferences), root.preferencesState)
+        }
+
+    @Test
+    fun preferencesDidChangeConfiguresQuiz() =
+        runTest {
+            repository.stored = preferences
+            makeRoot().preferencesDidChange()
+            assertEquals(listOf(preferences.roundSettings(TopicNames.English)), factory.settings)
+        }
+
+    @Test
+    fun preferencesDidChangeWithoutPreferencesDoesNothing() =
+        runTest {
+            val root = makeRoot()
+            root.preferencesDidChange()
+            assertEquals(emptyList<Any>(), factory.settings)
+            assertEquals(QuizViewModel.Phase.Welcome, root.quiz.state.phase)
+        }
+
+    /** Saving unchanged settings keeps the round that's already prepared. */
+    @Test
+    fun preferencesDidChangeWithSameSettingsKeepsRound() =
+        runTest {
+            repository.stored = preferences
+            val root = makeRoot()
+            root.preferencesDidChange()
+            root.save(preferences)
+            advanceUntilIdle()
+            root.preferencesDidChange()
+            assertEquals(1, factory.settings.size)
         }
 
     @Test
@@ -125,6 +162,7 @@ class RootViewModelTests {
                     StubModelAvailabilityProvider(ModelAvailability.Downloading(null), gate),
                     StubTopicReviewRepository(),
                     TopicNames.English,
+                    testQuiz(),
                 )
             // Not advanceUntilIdle: that would also run the ceiling's virtual clock out.
             runCurrent()
@@ -144,6 +182,7 @@ class RootViewModelTests {
                     StubModelAvailabilityProvider(ModelAvailability.Downloading(null), CompletableDeferred()),
                     StubTopicReviewRepository(),
                     TopicNames.English,
+                    testQuiz(),
                 )
             advanceTimeBy(RootViewModel.AVAILABILITY_CHECK_CEILING_MILLIS - 1)
             assertEquals(false, root.uiState.value.availabilityChecked)
@@ -159,7 +198,7 @@ class RootViewModelTests {
             val gate = CompletableDeferred<Unit>()
             val provider =
                 StubModelAvailabilityProvider(ModelAvailability.Downloading(null), gate, ModelAvailability.Downloadable)
-            val root = RootViewModel(repository, provider, StubTopicReviewRepository(), TopicNames.English)
+            val root = RootViewModel(repository, provider, StubTopicReviewRepository(), TopicNames.English, testQuiz())
             advanceTimeBy(RootViewModel.AVAILABILITY_CHECK_CEILING_MILLIS + 1)
             runCurrent()
             assertEquals(true, root.uiState.value.availabilityChecked)
@@ -175,7 +214,7 @@ class RootViewModelTests {
             val gate = CompletableDeferred<Unit>()
             val notEligible = ModelAvailability.Unavailable(ModelUnavailableReason.DEVICE_NOT_ELIGIBLE)
             val provider = StubModelAvailabilityProvider(ModelAvailability.Downloading(null), gate, notEligible)
-            val root = RootViewModel(repository, provider, StubTopicReviewRepository(), TopicNames.English)
+            val root = RootViewModel(repository, provider, StubTopicReviewRepository(), TopicNames.English, testQuiz())
             advanceTimeBy(RootViewModel.AVAILABILITY_CHECK_CEILING_MILLIS + 1)
             gate.complete(Unit)
             runCurrent()
@@ -189,7 +228,7 @@ class RootViewModelTests {
             val gate = CompletableDeferred<Unit>()
             val provider =
                 StubModelAvailabilityProvider(ModelAvailability.Downloading(null), gate, ModelAvailability.Available)
-            val root = RootViewModel(repository, provider, StubTopicReviewRepository(), TopicNames.English)
+            val root = RootViewModel(repository, provider, StubTopicReviewRepository(), TopicNames.English, testQuiz())
             advanceTimeBy(RootViewModel.AVAILABILITY_CHECK_CEILING_MILLIS + 1)
             gate.complete(Unit)
             runCurrent()
@@ -246,7 +285,7 @@ class RootViewModelTests {
         runTest {
             val gate = CompletableDeferred<Unit>()
             val slow = StubModelAvailabilityProvider(refreshGate = gate)
-            val root = RootViewModel(repository, slow, StubTopicReviewRepository(), TopicNames.English)
+            val root = RootViewModel(repository, slow, StubTopicReviewRepository(), TopicNames.English, testQuiz())
             root.onResume()
             runCurrent()
             assertEquals(1, slow.refreshCount)
@@ -264,7 +303,7 @@ class RootViewModelTests {
         runTest {
             val gate = CompletableDeferred<Unit>()
             val provider = StubModelAvailabilityProvider(downloadGate = gate)
-            val root = RootViewModel(repository, provider, StubTopicReviewRepository(), TopicNames.English)
+            val root = RootViewModel(repository, provider, StubTopicReviewRepository(), TopicNames.English, testQuiz())
             advanceUntilIdle()
 
             provider.set(ModelAvailability.Downloadable)
@@ -289,7 +328,7 @@ class RootViewModelTests {
     fun resumeAfterTheCeilingAsksAgainWhenTheLaunchCheckHangs() =
         runTest {
             val slow = StubModelAvailabilityProvider(refreshGate = CompletableDeferred())
-            val root = RootViewModel(repository, slow, StubTopicReviewRepository(), TopicNames.English)
+            val root = RootViewModel(repository, slow, StubTopicReviewRepository(), TopicNames.English, testQuiz())
             root.onResume()
             runCurrent()
             assertEquals(1, slow.refreshCount)
@@ -306,7 +345,8 @@ class RootViewModelTests {
         runTest {
             val gate = CompletableDeferred<Unit>()
             val slowDisk = PreferencesRepositorySpy(loadGate = gate)
-            val root = RootViewModel(slowDisk, availability, StubTopicReviewRepository(), TopicNames.English)
+            val root =
+                RootViewModel(slowDisk, availability, StubTopicReviewRepository(), TopicNames.English, testQuiz())
             runCurrent()
             val newer = readerPreferencesFixture(AgeGroup.FIFTEEN)
             root.save(newer)
@@ -322,7 +362,7 @@ class RootViewModelTests {
         runTest {
             val gate = CompletableDeferred<Unit>()
             val slow = StubModelAvailabilityProvider(refreshGate = gate)
-            val root = RootViewModel(repository, slow, StubTopicReviewRepository(), TopicNames.English)
+            val root = RootViewModel(repository, slow, StubTopicReviewRepository(), TopicNames.English, testQuiz())
             advanceTimeBy(RootViewModel.AVAILABILITY_CHECK_CEILING_MILLIS + 1)
             assertEquals(true, root.uiState.value.availabilityChecked)
             assertEquals(false, root.uiState.value.availabilityAnswered)

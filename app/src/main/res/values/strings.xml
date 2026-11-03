@@ -141,4 +141,63 @@
     <string name="settings_reset">Reset</string>
     <string name="texts_per_round">Texts per round</string>
     <string name="texts_per_round_caption">How many short texts each round has, with a question after each.</string>
+    <string name="quiz_welcome_headline">%1$s short texts, written for you.</string>
+    <string name="quiz_welcome_kicker">Today\'s round · readers %1$s</string>
+    <string name="quiz_start">Start</string>
+    <string name="quiz_topics_none">Drawn from your topics. One question after each.</string>
+    <string name="quiz_topics_list">Drawn from %1$s. One question after each.</string>
+    <string name="quiz_topics_more" tools:ignore="PluralsCandidate">Drawn from %1$s and %2$d more of your topics. One question after each.</string>
+    <string name="quiz_topic_separator">", "</string>
+    <string name="quiz_now_writing">Now writing</string>
+    <string name="quiz_next_text_placeholder">Your next text</string>
+    <string name="quiz_loading_message">A %1$d-word text for readers %2$s. Usually ready in a few seconds.</string>
+    <string name="quiz_loading_accessibility">Writing text %1$d of %2$d, about %3$s</string>
+    <string name="quiz_failed_kicker" tools:ignore="PluralsCandidate">Text %1$d didn\'t print</string>
+    <string name="quiz_failed_title">We couldn\'t write this one.</string>
+    <string name="quiz_failed_topic">Something went wrong while writing your text about %1$s.</string>
+    <string name="quiz_failed_generic">Something went wrong while writing your text.</string>
+    <string name="quiz_failed_saved_one">Your answer to text 1 is saved — nothing is lost.</string>
+    <string name="quiz_failed_saved_many">Your answers so far are saved — nothing is lost.</string>
+    <string name="quiz_try_again">Try again</string>
+    <string name="quiz_try_different_topic">Try a different topic</string>
+    <string name="quiz_answer_question">Answer the question</string>
+    <string name="quiz_next_text">Next text</string>
+    <string name="quiz_see_results">See results</string>
+    <string name="quiz_correct_verdict">Correct!</string>
+    <string name="quiz_not_quite">Not quite</string>
+    <string name="quiz_your_answer">Your answer</string>
+    <string name="quiz_correct_answer">Correct answer</string>
+    <string name="quiz_your_answer_incorrect">Your answer, incorrect</string>
+    <string name="quiz_time_to_read">Time to read</string>
+    <string name="quiz_time_left">Time left to read</string>
+    <string name="result_kicker">Round complete · readers %1$s</string>
+    <string name="result_score">%1$d of %2$d</string>
+    <string name="result_perfect">Perfect score! You understood every text.</string>
+    <string name="result_great">Great reading! You\'re paying close attention.</string>
+    <string name="result_good">Good work. Keep practicing to sharpen your understanding.</string>
+    <string name="result_keep_going">Keep going! Try reading each text slowly and look for key ideas.</string>
+    <string name="result_correct">Correct</string>
+    <string name="result_row_correct">Text %1$d, %2$s, correct</string>
+    <string name="result_row_missed">Text %1$d, %2$s, missed</string>
+    <string name="result_practice_again">Practice again</string>
+    <string name="result_title">Results</string>
+    <string name="review_count" tools:ignore="PluralsCandidate">%1$d of %2$d missed</string>
+    <string name="review_next_missed">Next missed text</string>
+    <string name="review_back_to_results">Back to results</string>
+    <!-- Used by the History round page in phase 7 (ReviewScreen's backTitle). -->
+    <string name="review_back_to_round" tools:ignore="UnusedResources">Back to round</string>
+    <string name="review_kicker">Text %1$d · %2$s</string>
+    <string name="review_you">You</string>
+    <string name="review_answer">Answer</string>
+    <string name="review_from_the_text">From the text</string>
+    <!-- The round sizes 3 to 9, spelled out in order. ICU's spell-out rules are not in the Android SDK. -->
+    <string-array name="quiz_spelled_out_counts">
+        <item>three</item>
+        <item>four</item>
+        <item>five</item>
+        <item>six</item>
+        <item>seven</item>
+        <item>eight</item>
+        <item>nine</item>
+    </string-array>
 </resources>

@@ -12,11 +12,15 @@ import com.victorarana.leo.data.genai.MlKitModelStatusSource
 import com.victorarana.leo.data.repositories.ExerciseRepository
 import com.victorarana.leo.data.repositories.ModelAvailabilityProvider
 import com.victorarana.leo.data.repositories.PreferencesRepository
+import com.victorarana.leo.data.repositories.RoundHistoryRecorder
 import com.victorarana.leo.data.repositories.RoundHistoryRepository
 import com.victorarana.leo.data.repositories.TopicReviewRepository
 import com.victorarana.leo.data.room.RoomRoundHistoryRepository
 import com.victorarana.leo.domain.RoundSettings
 import com.victorarana.leo.features.components.ResourceTopicNames
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 
 /**
  * The composition root: builds the repositories and hands them to the ViewModels. The port of `MyApp.init`,
@@ -51,8 +55,16 @@ class AppContainer(
         )
     }
 
-    /** Wired to the quiz's `onRoundFinished` in phase 7. */
+    /**
+     * For work that must outlive the Activity, such as saving the round the reader just finished. A failure of one
+     * job doesn't cancel the others.
+     */
+    val applicationScope: CoroutineScope by lazy { CoroutineScope(SupervisorJob() + Dispatchers.Main) }
+
     val history: RoundHistoryRepository by lazy { RoomRoundHistoryRepository.live(appContext) }
+
+    /** The quiz's `onRoundFinished` (phase 7 moves this into `RoundHistoryViewModel.record`). */
+    val roundHistoryRecorder: RoundHistoryRecorder by lazy { RoundHistoryRecorder(history, applicationScope) }
 
     /** A new repository for each round, so a change of the device language applies to the next one. */
     fun makeExerciseRepository(settings: RoundSettings): ExerciseRepository =

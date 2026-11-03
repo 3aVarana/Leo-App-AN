@@ -1,27 +1,13 @@
 package com.victorarana.leo.snapshots
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.unit.dp
-import com.victorarana.leo.features.components.DotState
-import com.victorarana.leo.features.components.ProgressDots
+import com.victorarana.leo.domain.AgeGroup
+import com.victorarana.leo.features.quiz.WelcomeScreen
 import com.victorarana.leo.features.root.LaunchIntro
 import com.victorarana.leo.features.root.LaunchIntroHost
-import com.victorarana.leo.features.root.launchWordmarkTarget
-import com.victorarana.leo.features.theme.LeoTextStyle
-import com.victorarana.leo.features.theme.LeoTheme
 import com.victorarana.leo.features.theme.LocalReduceMotion
-import com.victorarana.leo.features.theme.leoReadableWidth
-import com.victorarana.leo.features.theme.toTextStyle
 import com.victorarana.leo.support.SNAPSHOT_DEVICE_QUALIFIERS
 import com.victorarana.leo.support.assertViewSnapshot
 import org.junit.Rule
@@ -31,30 +17,16 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
-/**
- * A stand-in for Welcome (phase 6), which re-records these against the real screen: a header with the wordmark
- * marked as the launch target, so the intro has somewhere to move to.
- */
+/** The real Welcome screen, whose header wordmark is the launch target (the stand-in page of phase 4 is gone). */
 @Composable
 private fun TestPage() {
-    Column(Modifier.leoReadableWidth().padding(top = 48.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            BasicText(
-                text = "Leo",
-                modifier = Modifier.launchWordmarkTarget(),
-                style = LeoTextStyle.wordmark.toTextStyle().copy(color = LeoTheme.colors.ink),
-            )
-        }
-        ProgressDots(
-            states = List(6) { DotState.Upcoming },
-            currentIndex = null,
-            alignment = Alignment.Start,
-        )
-        BasicText(
-            text = "A test page with a header wordmark",
-            style = LeoTextStyle.body.toTextStyle().copy(color = LeoTheme.colors.ink),
-        )
-    }
+    WelcomeScreen(
+        ageGroup = AgeGroup.NINE,
+        exerciseCount = 6,
+        topicNames = listOf("Volcanoes", "The solar system", "Pirates and treasure", "Inventors", "Rainforests"),
+        onStart = {},
+        onSettings = {},
+    )
 }
 
 @RunWith(RobolectricTestRunner::class)
