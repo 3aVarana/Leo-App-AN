@@ -1,6 +1,7 @@
 package com.victorarana.leo
 
 import android.content.Intent
+import android.util.Log
 import com.victorarana.leo.data.genai.LanguageModel
 import com.victorarana.leo.data.genai.StubLanguageModel
 import com.victorarana.leo.data.genai.StubModelAvailabilityProvider
@@ -17,6 +18,7 @@ import com.victorarana.leo.data.repositories.ModelAvailabilityProvider
  * default), `downloadable` (a simulated download that ends `available`) or `notEligible`.
  */
 object StubModelHook {
+    private const val TAG = "StubModelHook"
     private const val ENABLED_EXTRA = "leo.stubModel"
     private const val AVAILABILITY_EXTRA = "leo.stubAvailability"
 
@@ -24,15 +26,27 @@ object StubModelHook {
 
     @Volatile private var availabilityName = "available"
 
+    // Set once the container has asked for either provider: switching after that would pair the stub writer with
+    // the real availability (an `am start` without `-S` against a live process).
+    @Volatile private var handedOut = false
+
     fun enableIfRequested(intent: Intent?) {
-        if (intent?.getBooleanExtra(ENABLED_EXTRA, false) == true) {
-            enabled = true
-            availabilityName = intent.getStringExtra(AVAILABILITY_EXTRA) ?: "available"
+        if (intent?.getBooleanExtra(ENABLED_EXTRA, false) != true) return
+        if (handedOut) {
+            if (!enabled) Log.w(TAG, "Ignoring $ENABLED_EXTRA: the model is already chosen; restart with am start -S")
+            return
         }
+        enabled = true
+        availabilityName = intent.getStringExtra(AVAILABILITY_EXTRA) ?: "available"
     }
 
-    fun languageModel(): LanguageModel? = if (enabled) StubLanguageModel() else null
+    fun languageModel(): LanguageModel? {
+        handedOut = true
+        return if (enabled) StubLanguageModel() else null
+    }
 
-    fun availability(): ModelAvailabilityProvider? =
-        if (enabled) StubModelAvailabilityProvider.named(availabilityName) else null
+    fun availability(): ModelAvailabilityProvider? {
+        handedOut = true
+        return if (enabled) StubModelAvailabilityProvider.named(availabilityName) else null
+    }
 }

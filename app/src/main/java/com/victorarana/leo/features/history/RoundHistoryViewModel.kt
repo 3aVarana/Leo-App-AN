@@ -215,10 +215,14 @@ class RoundHistoryViewModel(
     }
 
     private fun publish(change: RoundHistoryUiState.() -> RoundHistoryUiState) {
+        // Read once, outside `update`, whose lambda can run again under contention: `firstDayOfWeek` is a binder
+        // call on API 33+ (`deviceLocale`).
+        val zone = zone()
+        val now = now()
+        val firstDay = firstDayOfWeek()
         mutableState.update {
             val next = it.change()
-            val zone = zone()
-            next.copy(zone = zone, sections = sections(next.summaries, now(), zone, firstDayOfWeek()))
+            next.copy(zone = zone, sections = sections(next.summaries, now, zone, firstDay))
         }
     }
 
