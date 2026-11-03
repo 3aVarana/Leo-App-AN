@@ -185,12 +185,29 @@
     <string name="review_count" tools:ignore="PluralsCandidate">%1$d de %2$d falladas</string>
     <string name="review_next_missed">Siguiente texto fallado</string>
     <string name="review_back_to_results">Volver a los resultados</string>
-    <!-- Used by the History round page in phase 7 (ReviewScreen's backTitle). -->
-    <string name="review_back_to_round" tools:ignore="UnusedResources">Volver a la ronda</string>
+    <string name="review_back_to_round">Volver a la ronda</string>
     <string name="review_kicker">Texto %1$d · %2$s</string>
     <string name="review_you">Tú</string>
     <string name="review_answer">Respuesta</string>
     <string name="review_from_the_text">Del texto</string>
+    <string name="history_title">Tus rondas</string>
+    <plurals name="history_summary">
+        <item quantity="one">%1$d ronda leída · %2$s respondido correctamente</item>
+        <item quantity="many">%1$d rondas leídas · %2$s respondido correctamente</item>
+        <item quantity="other">%1$d rondas leídas · %2$s respondido correctamente</item>
+    </plurals>
+    <string name="history_this_week">Esta semana</string>
+    <string name="history_last_week">La semana pasada</string>
+    <string name="history_earlier_in">A principios de %1$s</string>
+    <string name="history_delete">Eliminar</string>
+    <string name="history_row_accessibility" tools:ignore="PluralsCandidate">%1$s, %2$s, %3$d de %4$d correctas</string>
+    <string name="history_row_action">Ver la ronda</string>
+    <string name="round_kicker">%1$s · lectores de %2$s</string>
+    <string name="round_topic_skill">%1$s · %2$s</string>
+    <string name="round_review_missed" tools:ignore="PluralsCandidate">Repasar %1$d falladas</string>
+    <string name="round_row_correct">Texto %1$d, %2$s, %3$s, correcta</string>
+    <string name="round_row_missed">Texto %1$d, %2$s, %3$s, fallada</string>
+    <string name="navigation_back">Atrás</string>
     <!-- The round sizes 3 to 9, spelled out in order. ICU's spell-out rules are not in the Android SDK. -->
     <string-array name="quiz_spelled_out_counts">
         <item>tres</item>

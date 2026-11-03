@@ -41,12 +41,14 @@ private val TopOffsetMinimum = 24.dp
  * offsets.
  *
  * The ground fills behind the system bars (edge to edge) and the content stays inside the safe area. The
- * [bottomBar] stays pinned below the content, above the navigation bar.
+ * [bottomBar] stays pinned below the content, above the navigation bar, and the [topBar] (a pushed page's
+ * `BackBar`) pinned above it, below the status bar.
  */
 @Composable
 fun ScrollingScreen(
     modifier: Modifier = Modifier,
     bottomBar: (@Composable ColumnScope.() -> Unit)? = null,
+    topBar: (@Composable () -> Unit)? = null,
     content: @Composable ScrollingScope.() -> Unit,
 ) {
     Column(
@@ -58,6 +60,7 @@ fun ScrollingScreen(
                     WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top),
                 ),
     ) {
+        topBar?.invoke()
         BoxWithConstraints(Modifier.weight(1f)) {
             val viewportHeight = maxHeight
             CompositionLocalProvider(LocalContentColor provides LeoTheme.colors.ink) {

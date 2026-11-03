@@ -185,12 +185,29 @@
     <string name="review_count" tools:ignore="PluralsCandidate">%1$d de %2$d erradas</string>
     <string name="review_next_missed">Próximo texto errado</string>
     <string name="review_back_to_results">Voltar aos resultados</string>
-    <!-- Used by the History round page in phase 7 (ReviewScreen's backTitle). -->
-    <string name="review_back_to_round" tools:ignore="UnusedResources">Voltar à rodada</string>
+    <string name="review_back_to_round">Voltar à rodada</string>
     <string name="review_kicker">Texto %1$d · %2$s</string>
     <string name="review_you">Você</string>
     <string name="review_answer">Resposta</string>
     <string name="review_from_the_text">Do texto</string>
+    <string name="history_title">Suas rodadas</string>
+    <plurals name="history_summary">
+        <item quantity="one">%1$d rodada lida · %2$s respondido corretamente</item>
+        <item quantity="many">%1$d rodadas lidas · %2$s respondido corretamente</item>
+        <item quantity="other">%1$d rodadas lidas · %2$s respondido corretamente</item>
+    </plurals>
+    <string name="history_this_week">Esta semana</string>
+    <string name="history_last_week">Semana passada</string>
+    <string name="history_earlier_in">Início de %1$s</string>
+    <string name="history_delete">Excluir</string>
+    <string name="history_row_accessibility" tools:ignore="PluralsCandidate">%1$s, %2$s, %3$d de %4$d corretas</string>
+    <string name="history_row_action">Ver a rodada</string>
+    <string name="round_kicker">%1$s · leitores de %2$s</string>
+    <string name="round_topic_skill">%1$s · %2$s</string>
+    <string name="round_review_missed" tools:ignore="PluralsCandidate">Revisar %1$d erradas</string>
+    <string name="round_row_correct">Texto %1$d, %2$s, %3$s, correta</string>
+    <string name="round_row_missed">Texto %1$d, %2$s, %3$s, errada</string>
+    <string name="navigation_back">Voltar</string>
     <!-- The round sizes 3 to 9, spelled out in order. ICU's spell-out rules are not in the Android SDK. -->
     <string-array name="quiz_spelled_out_counts">
         <item>três</item>

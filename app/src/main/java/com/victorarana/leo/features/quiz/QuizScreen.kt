@@ -22,7 +22,7 @@ private const val PHASE_FADE_MILLIS = 300
  * had, so Exercise never draws without its exercise, and a change inside a phase (an option picked) recomposes the
  * screen in place instead of cross-fading.
  *
- * @param onHistory `null` hides the History buttons (phase 6; phase 7 passes it once a round is saved).
+ * @param onHistory `null` hides the History buttons: the current age group has no saved round to show yet.
  * @param onReview Opens Review at this position in the round's misses.
  */
 @Suppress("CyclomaticComplexMethod") // One branch per phase, like the iOS switch, each with its guarded actions.

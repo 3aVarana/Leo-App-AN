@@ -12,6 +12,7 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -30,10 +31,12 @@ import com.victorarana.leo.features.root.RootViewModel
 import com.victorarana.leo.features.theme.LeoTheme
 import com.victorarana.leo.support.ExerciseRepositoryFactorySpy
 import com.victorarana.leo.support.PreferencesRepositorySpy
+import com.victorarana.leo.support.RoundHistoryRepositorySpy
 import com.victorarana.leo.support.StubExerciseRepository
 import com.victorarana.leo.support.StubModelAvailabilityProvider
 import com.victorarana.leo.support.StubTopicReviewRepository
 import com.victorarana.leo.support.makeQuiz
+import com.victorarana.leo.support.testHistory
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -56,14 +59,20 @@ class QuizScreenTests {
     private val correctOption = "To feel small shakes that could warn of danger"
     private val wrongOption = "To measure how much snow falls"
 
-    private fun makeRoot(spy: ExerciseRepositoryFactorySpy) =
-        RootViewModel(
+    private val historyRepository = RoundHistoryRepositorySpy()
+
+    // Wired like `MainActivity`: a finished round goes to the history.
+    private fun makeRoot(spy: ExerciseRepositoryFactorySpy): RootViewModel {
+        val history = testHistory(historyRepository)
+        return RootViewModel(
             repository,
             StubModelAvailabilityProvider(),
             StubTopicReviewRepository(),
             TopicNames.English,
-            makeQuiz(spy),
+            makeQuiz(spy, onRoundFinished = history::record),
+            history,
         ).apply { onIntroPlayed() }
+    }
 
     private fun show(
         spy: ExerciseRepositoryFactorySpy =
@@ -192,6 +201,23 @@ class QuizScreenTests {
 
         tap("Results")
         composeRule.onNodeWithText("Practice again").assertIsDisplayed()
+    }
+
+    /** The round is saved when Results opens, and only then does Results offer History (H6). */
+    @Test
+    fun resultsShowsHistoryOnceTheRoundIsSaved() {
+        show()
+        composeRule.onAllNodesWithContentDescription("Past rounds").assertCountEquals(0)
+        tap("Start")
+        repeat(5) { answer(correctOption) }
+        tap("Answer the question")
+        tapOption(correctOption)
+        tap("See results")
+        composeRule.onNodeWithText("6 of 6").assertIsDisplayed()
+        assertEquals(1, historyRepository.saved.size)
+        composeRule.onNodeWithContentDescription("Past rounds").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("1 round read · 100% answered right").assertIsDisplayed()
     }
 
     @Test

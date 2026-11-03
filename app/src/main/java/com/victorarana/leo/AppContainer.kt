@@ -12,7 +12,6 @@ import com.victorarana.leo.data.genai.MlKitModelStatusSource
 import com.victorarana.leo.data.repositories.ExerciseRepository
 import com.victorarana.leo.data.repositories.ModelAvailabilityProvider
 import com.victorarana.leo.data.repositories.PreferencesRepository
-import com.victorarana.leo.data.repositories.RoundHistoryRecorder
 import com.victorarana.leo.data.repositories.RoundHistoryRepository
 import com.victorarana.leo.data.repositories.TopicReviewRepository
 import com.victorarana.leo.data.room.RoomRoundHistoryRepository
@@ -62,9 +61,6 @@ class AppContainer(
     val applicationScope: CoroutineScope by lazy { CoroutineScope(SupervisorJob() + Dispatchers.Main) }
 
     val history: RoundHistoryRepository by lazy { RoomRoundHistoryRepository.live(appContext) }
-
-    /** The quiz's `onRoundFinished` (phase 7 moves this into `RoundHistoryViewModel.record`). */
-    val roundHistoryRecorder: RoundHistoryRecorder by lazy { RoundHistoryRecorder(history, applicationScope) }
 
     /** A new repository for each round, so a change of the device language applies to the next one. */
     fun makeExerciseRepository(settings: RoundSettings): ExerciseRepository =

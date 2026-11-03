@@ -9,6 +9,7 @@ import com.victorarana.leo.domain.AgeGroup
 import com.victorarana.leo.domain.ModelAvailability
 import com.victorarana.leo.domain.ReaderPreferences
 import com.victorarana.leo.domain.TopicNames
+import com.victorarana.leo.features.history.RoundHistoryViewModel
 import com.victorarana.leo.features.preferences.PreferencesEditorViewModel
 import com.victorarana.leo.features.quiz.QuizViewModel
 import kotlinx.coroutines.Job
@@ -53,16 +54,14 @@ data class RootUiState(
     val availabilityAnswered: Boolean,
 )
 
-/**
- * Owns the reader's preferences and the quiz, and is the only place preferences are saved. The phase-6 subset of
- * iOS `RootViewModel`: history joins it in phase 7.
- */
+/** Owns the reader's preferences, the quiz and the round history, and is the only place preferences are saved. */
 class RootViewModel(
     private val preferencesRepository: PreferencesRepository,
     private val availabilityProvider: ModelAvailabilityProvider,
     private val topicReviews: TopicReviewRepository,
     private val topicNames: TopicNames,
     val quiz: QuizViewModel,
+    val history: RoundHistoryViewModel,
 ) : ViewModel() {
     private val preferences = MutableStateFlow<PreferencesState>(PreferencesState.Loading)
     private val availabilityChecked = MutableStateFlow(false)
@@ -162,11 +161,13 @@ class RootViewModel(
 
     /**
      * Prepares a round with the current preferences. The quiz keeps the round it already has when the settings are
-     * the same. Run after onboarding, on launch and whenever settings are saved.
+     * the same, and points the history at the current age group. Run after onboarding, on launch and whenever
+     * settings are saved.
      */
     fun preferencesDidChange() {
         val ready = preferences.value as? PreferencesState.Ready ?: return
         quiz.configure(ready.preferences.roundSettings(topicNames))
+        history.setAgeGroup(ready.preferences.ageGroup)
     }
 
     /** An editor for the first launch. Saving it ends onboarding. */

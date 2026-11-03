@@ -19,6 +19,7 @@ import com.victorarana.leo.support.PreferencesRepositorySpy
 import com.victorarana.leo.support.StubModelAvailabilityProvider
 import com.victorarana.leo.support.StubTopicReviewRepository
 import com.victorarana.leo.support.preferencesEditorFixture
+import com.victorarana.leo.support.testHistory
 import com.victorarana.leo.support.testQuiz
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -42,6 +43,7 @@ class OnboardingScreenTests {
                 StubTopicReviewRepository(),
                 TopicNames.English,
                 testQuiz(),
+                testHistory(),
             ).apply { onIntroPlayed() }
         composeRule.setContent { LeoTheme { RootScreen(root) } }
         composeRule.waitForIdle()
