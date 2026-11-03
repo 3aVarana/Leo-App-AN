@@ -27,6 +27,9 @@ class RoundHistoryRepositorySpy : RoundHistoryRepository {
     /** When set, `delete` suspends until it completes, then fails if [deleteError] is set or removes the round. */
     var deleteGate: CompletableDeferred<Unit>? = null
 
+    /** Like [deleteGate], for one round only, so two deletes can answer in a chosen order. Wins over [deleteGate]. */
+    val deleteGates = mutableMapOf<UUID, CompletableDeferred<Unit>>()
+
     /** The calls to `delete`, failed ones included. */
     var deleteCalls = 0
         private set
@@ -63,7 +66,7 @@ class RoundHistoryRepositorySpy : RoundHistoryRepository {
         deleteCalls++
         errorToThrow?.let { throw it }
         // The gate first, then the failure: a store that is slow and then fails, as Room's IO hop is.
-        deleteGate?.await()
+        (deleteGates[id] ?: deleteGate)?.await()
         deleteError?.let { throw it }
         _deleted += id
         rounds.remove(id)

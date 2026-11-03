@@ -61,14 +61,14 @@ class RoundHistoryViewModelTests {
         firstDayOfWeek: DayOfWeek = DayOfWeek.MONDAY,
     ) = RoundHistoryViewModel(
         repository,
-        saveScope(),
+        storeScope(),
         now = { now },
         zone = { zone },
         firstDayOfWeek = { firstDayOfWeek },
     )
 
     // Not `backgroundScope`: `advanceUntilIdle` doesn't run what is left in it.
-    private fun TestScope.saveScope() = CoroutineScope(SupervisorJob() + StandardTestDispatcher(testScheduler))
+    private fun TestScope.storeScope() = CoroutineScope(SupervisorJob() + StandardTestDispatcher(testScheduler))
 
     private val RoundHistoryViewModel.state get() = uiState.value
 
@@ -256,6 +256,20 @@ class RoundHistoryViewModelTests {
             )
         }
 
+    /**
+     * A round dated after this week (the clock was moved back after it was saved) is "Earlier in <month>", as on iOS,
+     * so that kind can appear twice; the list's keys must not rely on kinds being unique.
+     */
+    @Test
+    fun aRoundDatedAfterThisWeekRepeatsEarlierThisMonth() =
+        runTest {
+            val march = Kind.EarlierThisMonth(YearMonth.of(2026, 3))
+            assertEquals(
+                listOf(march, Kind.ThisWeek, march),
+                kindsOf(march20, date(2026, 3, 25), date(2026, 3, 17), date(2026, 3, 5)),
+            )
+        }
+
     /** Android only: the first weekday comes from the device's locale, so the same round sits in different weeks. */
     @Test
     fun sectionsFollowTheFirstDayOfWeek() =
@@ -334,7 +348,7 @@ class RoundHistoryViewModelTests {
             val viewModel =
                 ViewModelProvider.create(
                     store,
-                    viewModelFactory { initializer { RoundHistoryViewModel(repository, saveScope()) } },
+                    viewModelFactory { initializer { RoundHistoryViewModel(repository, storeScope()) } },
                 )[RoundHistoryViewModel::class]
             viewModel.setAgeGroup(AgeGroup.NINE)
             advanceUntilIdle()
@@ -540,6 +554,59 @@ class RoundHistoryViewModelTests {
             assertEquals(1, viewModel.state.roundCount)
         }
 
+    /**
+     * Android only: swiping a second row before the first delete answers. The first one's reload mustn't bring the
+     * second back.
+     */
+    @Test
+    fun overlappingDeletesDontBringTheSecondRowBack() =
+        runTest {
+            val viewModel = makeViewModel(march20)
+            setAgeGroup(viewModel, AgeGroup.NINE)
+            val first = roundRecordFixture(AgeGroup.NINE, finishedAt = date(2026, 3, 19))
+            val second = roundRecordFixture(AgeGroup.NINE, finishedAt = date(2026, 3, 18))
+            val kept = roundRecordFixture(AgeGroup.NINE, finishedAt = date(2026, 3, 17))
+            listOf(first, second, kept).forEach { record(viewModel, it) }
+            val firstGate = CompletableDeferred<Unit>().also { repository.deleteGates[first.id] = it }
+            val secondGate = CompletableDeferred<Unit>().also { repository.deleteGates[second.id] = it }
+
+            viewModel.delete(first.id)
+            viewModel.delete(second.id)
+            runCurrent()
+            firstGate.complete(Unit)
+            advanceUntilIdle()
+            // The store still holds the second round: its delete hasn't answered.
+            assertEquals(listOf(kept.id), viewModel.state.summaries.map { it.id })
+            assertFalse(viewModel.state.isLoaded)
+
+            secondGate.complete(Unit)
+            advanceUntilIdle()
+            assertEquals(listOf(kept.id), viewModel.state.summaries.map { it.id })
+            assertTrue(viewModel.state.isLoaded)
+        }
+
+    /** Android only: the reload after a save, landing while a delete waits, mustn't bring the deleted row back. */
+    @Test
+    fun aSaveDuringADeleteDoesntBringTheRowBack() =
+        runTest {
+            val viewModel = makeViewModel(march20)
+            setAgeGroup(viewModel, AgeGroup.NINE)
+            val deleted = roundRecordFixture(AgeGroup.NINE, finishedAt = date(2026, 3, 18))
+            record(viewModel, deleted)
+            val gate = CompletableDeferred<Unit>().also { repository.deleteGates[deleted.id] = it }
+
+            viewModel.delete(deleted.id)
+            runCurrent()
+            val saved = roundRecordFixture(AgeGroup.NINE, finishedAt = date(2026, 3, 19))
+            record(viewModel, saved)
+            assertEquals(listOf(saved.id), viewModel.state.summaries.map { it.id })
+
+            gate.complete(Unit)
+            advanceUntilIdle()
+            assertEquals(listOf(saved.id), viewModel.state.summaries.map { it.id })
+            assertTrue(viewModel.state.isLoaded)
+        }
+
     /** Swiping and leaving the app: the delete belongs to the application's scope, not the ViewModel's. */
     @Test
     fun deleteCompletesAfterTheViewModelIsCleared() =
@@ -548,7 +615,7 @@ class RoundHistoryViewModelTests {
             val viewModel =
                 ViewModelProvider.create(
                     store,
-                    viewModelFactory { initializer { RoundHistoryViewModel(repository, saveScope()) } },
+                    viewModelFactory { initializer { RoundHistoryViewModel(repository, storeScope()) } },
                 )[RoundHistoryViewModel::class]
             viewModel.setAgeGroup(AgeGroup.NINE)
             val round = roundRecordFixture(AgeGroup.NINE)
@@ -573,7 +640,7 @@ class RoundHistoryViewModelTests {
             val viewModel =
                 RoundHistoryViewModel(
                     repository,
-                    saveScope(),
+                    storeScope(),
                     now = { clock },
                     zone = { ZoneOffset.UTC },
                     firstDayOfWeek = { DayOfWeek.MONDAY },
@@ -600,7 +667,7 @@ class RoundHistoryViewModelTests {
             val viewModel =
                 RoundHistoryViewModel(
                     repository,
-                    saveScope(),
+                    storeScope(),
                     now = { date(2026, 3, 18) },
                     zone = { zone },
                     firstDayOfWeek = { firstDay },

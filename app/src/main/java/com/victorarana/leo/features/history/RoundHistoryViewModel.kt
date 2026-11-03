@@ -23,6 +23,7 @@ import java.time.YearMonth
 import java.time.ZoneId
 import java.time.temporal.TemporalAdjusters
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 
 private const val TAG = "RoundHistoryViewModel"
 
@@ -105,6 +106,9 @@ class RoundHistoryViewModel(
 
     private var loading: Job? = null
 
+    /** Rounds whose delete hasn't answered yet: no load shows them, even one that read the store before they left. */
+    private val pendingDeletes: MutableSet<UUID> = ConcurrentHashMap.newKeySet()
+
     /** Sets the age group History shows. A different one reloads; the same one does nothing. Null shows nothing. */
     fun setAgeGroup(ageGroup: AgeGroup?) {
         if (ageGroup == mutableState.value.ageGroup) return
@@ -135,16 +139,22 @@ class RoundHistoryViewModel(
 
     /**
      * Deletes round [id], on [storeScope] like a save. The row leaves the list at once (a swiped row must not bounce
-     * back while the store answers); then the list is read again, which puts the row back if the delete failed
-     * (iOS: no reload then, the row was never removed).
+     * back while the store answers, nor through another load that lands meanwhile, see [pendingDeletes]); then the
+     * list is read again, which puts the row back if the delete failed (iOS: no reload then, the row was never
+     * removed).
      */
     fun delete(id: UUID) {
         loading?.cancel()
+        pendingDeletes += id
         // Not loaded again yet: the list is only a guess until the store answers, so History doesn't close on an
         // empty list that the failed delete is about to put the round back into.
         publish { copy(summaries = summaries.filterNot { it.id == id }, isLoaded = false) }
         storeScope.launch {
-            attempt("Couldn't delete round $id") { repository.delete(id) }
+            try {
+                attempt("Couldn't delete round $id") { repository.delete(id) }
+            } finally {
+                pendingDeletes -= id
+            }
             reload()
         }
     }
@@ -170,7 +180,12 @@ class RoundHistoryViewModel(
                         .getOrDefault(emptyList())
                 // A cancelled load whose store call still returned, or an age group changed meanwhile.
                 currentCoroutineContext().ensureActive()
-                if (mutableState.value.ageGroup == ageGroup) publish { copy(summaries = summaries, isLoaded = true) }
+                if (mutableState.value.ageGroup == ageGroup) {
+                    // A delete still waiting for the store keeps its row out, and the list unconfirmed: the reload
+                    // after that delete settles both.
+                    val pending = pendingDeletes.toSet()
+                    publish { copy(summaries = summaries.filterNot { it.id in pending }, isLoaded = pending.isEmpty()) }
+                }
             }
     }
 

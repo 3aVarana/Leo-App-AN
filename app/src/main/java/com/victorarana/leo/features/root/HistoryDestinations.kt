@@ -119,7 +119,7 @@ private fun HistoryDestination(
         onDelete = history::delete,
         onBack = dropUnlessResumed { navController.popBackStack() },
         // Nothing to show: leave even while still entering (a restored route), but only if this is the screen on top.
-        onEmpty = { if (navController.currentBackStackEntry == entry) navController.popBackStack() },
+        onEmpty = { navController.popIfOnTop(entry) },
     )
 }
 
@@ -131,13 +131,7 @@ private fun RoundDestination(
 ) {
     val id = entry.toRoute<LeoRoute.HistoryRound>().id
     val round =
-        rememberRound(history, id) {
-            if (navController.currentBackStackEntry ==
-                entry
-            ) {
-                navController.popBackStack()
-            }
-        }
+        rememberRound(history, id) { navController.popIfOnTop(entry) }
     val state by history.uiState.collectAsStateWithLifecycle()
     if (round == null) {
         Box(Modifier.fillMaxSize().leoScreenBackground())
@@ -163,17 +157,11 @@ private fun HistoryReviewDestination(
 ) {
     val route = entry.toRoute<LeoRoute.HistoryReview>()
     val round =
-        rememberRound(history, route.roundId) {
-            if (navController.currentBackStackEntry ==
-                entry
-            ) {
-                navController.popBackStack()
-            }
-        }
+        rememberRound(history, route.roundId) { navController.popIfOnTop(entry) }
     val misses = round?.misses.orEmpty()
     if (round != null && misses.isEmpty()) {
         // A round without misses has nothing to review.
-        LaunchedEffect(Unit) { if (navController.currentBackStackEntry == entry) navController.popBackStack() }
+        LaunchedEffect(Unit) { navController.popIfOnTop(entry) }
     }
     if (misses.isEmpty()) {
         Box(Modifier.fillMaxSize().leoScreenBackground())
@@ -211,4 +199,9 @@ private fun rememberRound(
         }
     }
     return match
+}
+
+/** Leaves [entry], even while it is still entering, but only if it is the screen on top: never pops another one. */
+private fun NavHostController.popIfOnTop(entry: NavBackStackEntry) {
+    if (currentBackStackEntry == entry) popBackStack()
 }

@@ -10,6 +10,7 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
@@ -69,19 +70,22 @@ class HistoryScreenTests {
         roundRecordFixture(AgeGroup.NINE, finishedAt, results = listOf(true, false, true, true, false, true))
     private val perfect = roundRecordFixture(AgeGroup.NINE, finishedAt, results = List(6) { true })
 
-    private fun makeRoot() =
+    private fun makeRoot(now: () -> Instant = Instant::now) =
         RootViewModel(
             preferences,
             StubModelAvailabilityProvider(),
             StubTopicReviewRepository(),
             TopicNames.English,
             testQuiz(),
-            testHistory(repository),
+            testHistory(repository, now),
         ).apply { onIntroPlayed() }
 
-    private fun show(vararg saved: com.victorarana.leo.domain.RoundRecord): RootViewModel {
+    private fun show(
+        vararg saved: com.victorarana.leo.domain.RoundRecord,
+        now: () -> Instant = Instant::now,
+    ): RootViewModel {
         runBlocking { saved.forEach { repository.save(it) } }
-        val root = makeRoot()
+        val root = makeRoot(now)
         composeRule.setContent { LeoTheme { RootScreen(root) } }
         composeRule.waitForIdle()
         return root
@@ -106,6 +110,24 @@ class HistoryScreenTests {
     private fun tap(text: String) {
         composeRule.onNodeWithText(text).performClick()
         composeRule.waitForIdle()
+    }
+
+    /** A round dated after this week repeats "Earlier in <month>" below "This week": two headers of one kind. */
+    @Test
+    fun aRoundDatedAfterThisWeekDoesntCrashTheList() {
+        // Wednesday 18 November 2026, at noon so no zone moves a day across a week or a month.
+        val wednesday = Instant.parse("2026-11-18T12:00:00Z")
+        val rounds =
+            listOf("2026-11-26", "2026-11-17", "2026-11-03").map {
+                roundRecordFixture(AgeGroup.NINE, Instant.parse("${it}T12:00:00Z"), results = List(6) { true })
+            }
+        show(*rounds.toTypedArray(), now = { wednesday })
+        openHistory()
+        composeRule.onNodeWithText("Earlier in November").assertIsDisplayed()
+        // Down to the last round: both "Earlier in November" headers are composed at once only there.
+        composeRule.onNode(hasScrollAction()).performScrollToIndex(LAST_ITEM_OF_THREE_SECTIONS)
+        composeRule.waitForIdle()
+        composeRule.onNode(hasContentDescription("November 3", substring = true)).assertIsDisplayed()
     }
 
     @Test
@@ -442,3 +464,6 @@ class HistoryScreenTests {
         assertNotNull(navController.currentBackStackEntry)
     }
 }
+
+// The list's items: the header, then a title and one round for each of three sections.
+private const val LAST_ITEM_OF_THREE_SECTIONS = 6

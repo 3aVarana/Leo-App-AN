@@ -120,8 +120,10 @@ fun HistoryScreen(
             item(key = "header") { Header(state) }
             for ((index, section) in state.sections.withIndex()) {
                 // Pinned while its rounds scroll under it, like a plain `List`'s section headers (Q3). The ground
-                // behind it hides what passes. The key is text: a lazy list saves its keys.
-                stickyHeader(key = "section-${section.kind}") {
+                // behind it hides what passes. The key is text: a lazy list saves its keys. It carries the index
+                // because a kind can come back further down (a round dated after this week, from a clock moved
+                // back, is "Earlier in <month>" above "This week"), and a repeated key crashes a lazy list.
+                stickyHeader(key = "section-$index-${section.kind}") {
                     SectionHeader(section.kind, isFirst = index == 0, locale = locale)
                 }
                 items(section.rounds, key = { it.id }) { summary ->
