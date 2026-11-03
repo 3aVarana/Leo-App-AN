@@ -118,5 +118,5 @@ Commands after the fixes: `./gradlew assembleDebug` BUILD SUCCESSFUL; `./gradlew
 ## Review notes (PR #12 eighth review)
 
 - **A second delete of a round already being deleted is ignored** (a swipe and the TalkBack action at once), so the first to finish can't let a load show the row while the other runs. Test `aSecondDeleteOfTheSameRoundWhileTheFirstWaitsIsIgnored`.
-- **Not changed: load-then-navigate in the destination.** Navigation is the destination's job here as in phases 4-6 (`dropUnlessResumed`, RESUMED checks); the ViewModel only loads. A rotation mid-load drops that one tap (the reader taps again); a one-shot "opened" event in the ViewModel is a pattern the app doesn't use elsewhere. Revisit with the user if wanted.
+- **Not changed: load-then-navigate in the destination.** Navigation is the destination's job here as in phases 4-6 (`dropUnlessResumed`, RESUMED checks); the ViewModel only loads. A rotation mid-load drops that one tap (the reader taps again); a one-shot "opened" event in the ViewModel is a pattern the app doesn't use elsewhere. The user decided to keep it as is (raised again in the ninth review).
 - **Not changed, already answered:** `openedRound` isn't cleared and the restore order (seventh and fifth reviews above).
