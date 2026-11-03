@@ -7,7 +7,9 @@ import android.os.Build
 import android.os.LocaleList
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -66,9 +68,30 @@ internal fun pickDeviceLocale(
 private fun systemLocales(context: Context): LocaleList? =
     context.getSystemService(LocaleManager::class.java)?.systemLocales
 
-/** [resolvedLocale] for the resources in use, read from the configuration so a change of language recomposes. */
+/** The formatting locale, which [LeoTheme] resolves once for the whole tree (a test can set its own). */
+val LocalResolvedLocale = staticCompositionLocalOf<Locale?> { null }
+
+/**
+ * [resolvedLocale] for the resources in use: [LocalResolvedLocale], or (outside a [LeoTheme]) resolved here. One
+ * resolution per tree matters, because [deviceLocale] is a binder call on API 33+, and every `Kicker`, dot row and
+ * History row reads the locale.
+ */
 @Composable
-fun rememberResolvedLocale(): Locale {
+fun rememberResolvedLocale(): Locale = LocalResolvedLocale.current ?: rememberDeviceResolvedLocale()
+
+/** Provides [LocalResolvedLocale], unless an outer provider (a test) already set it. */
+@Composable
+internal fun ProvideResolvedLocale(content: @Composable () -> Unit) {
+    if (LocalResolvedLocale.current != null) {
+        content()
+    } else {
+        CompositionLocalProvider(LocalResolvedLocale provides rememberDeviceResolvedLocale(), content = content)
+    }
+}
+
+/** Read from the configuration, so a change of language (or of the system's locales) recomposes. */
+@Composable
+private fun rememberDeviceResolvedLocale(): Locale {
     val configuration = LocalConfiguration.current
     val context = LocalContext.current
     val resourceTag = stringResource(R.string.resource_locale)

@@ -2,6 +2,7 @@ package com.victorarana.leo.features.theme
 
 import android.os.Build
 import android.os.LocaleList
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -131,6 +132,23 @@ class ResolvedLocaleTests {
         composeRule.waitForIdle()
         assertEquals("pt-PT", tag)
         composeRule.onNodeWithText("Três textos curtos, escritos para você.").assertIsDisplayed()
+    }
+
+    /** One resolution for the whole tree (a binder call on API 33+); an outer provider, as in a test, wins. */
+    @Test
+    @Config(qualifiers = "fr-rFR")
+    fun leoThemeProvidesTheLocaleOnceAndAnOuterOneWins() {
+        var provided: Locale? = null
+        var overridden: Locale? = null
+        composeRule.setContent {
+            LeoTheme { provided = LocalResolvedLocale.current }
+            CompositionLocalProvider(LocalResolvedLocale provides Locale.JAPAN) {
+                LeoTheme { overridden = rememberResolvedLocale() }
+            }
+        }
+        composeRule.waitForIdle()
+        assertEquals("en-FR", provided?.toLanguageTag())
+        assertEquals(Locale.JAPAN, overridden)
     }
 
     @Test

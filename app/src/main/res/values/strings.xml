@@ -148,6 +148,7 @@
     <string name="quiz_start">Start</string>
     <string name="quiz_topics_none">Drawn from your topics. One question after each.</string>
     <string name="quiz_topics_list">Drawn from %1$s. One question after each.</string>
+    <!-- English reads the same for one and many; the plural exists for es and pt-BR. Keep both items identical. -->
     <plurals name="quiz_topics_more">
         <item quantity="one">Drawn from %1$s and %2$d more of your topics. One question after each.</item>
         <item quantity="other">Drawn from %1$s and %2$d more of your topics. One question after each.</item>
@@ -186,6 +187,7 @@
     <string name="result_row_missed">Text %1$d, %2$s, missed</string>
     <string name="result_practice_again">Practice again</string>
     <string name="result_title">Results</string>
+    <!-- English reads the same for one and many; the plural exists for es and pt-BR. Keep both items identical. -->
     <plurals name="review_count">
         <item quantity="one">%1$d of %2$d missed</item>
         <item quantity="other">%1$d of %2$d missed</item>
@@ -210,6 +212,7 @@
     <string name="history_row_action">Show round</string>
     <string name="round_kicker">%1$s · readers %2$s</string>
     <string name="round_topic_skill">%1$s · %2$s</string>
+    <!-- English reads the same for one and many; the plural exists for es and pt-BR. Keep both items identical. -->
     <plurals name="round_review_missed">
         <item quantity="one">Review %1$d missed</item>
         <item quantity="other">Review %1$d missed</item>
