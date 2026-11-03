@@ -461,6 +461,29 @@ class RoundHistoryViewModelTests {
             assertEquals(emptyList<Any>(), repository.deleted)
         }
 
+    /**
+     * As on iOS, a failed delete doesn't read the list again: its row goes back from memory. A store that also fails
+     * to read can't empty the list then, which would close History and hide its button.
+     */
+    @Test
+    fun aFailedDeleteKeepsTheListWhenTheStoreCantBeReadEither() =
+        runTest {
+            val viewModel = makeViewModel(march20)
+            setAgeGroup(viewModel, AgeGroup.NINE)
+            val older = roundRecordFixture(AgeGroup.NINE, finishedAt = date(2026, 3, 17))
+            val newer = roundRecordFixture(AgeGroup.NINE, finishedAt = date(2026, 3, 19))
+            record(viewModel, older)
+            record(viewModel, newer)
+            val loads = repository.summariesCalls
+
+            repository.errorToThrow = IllegalStateException("disk I/O error")
+            viewModel.delete(older.id)
+            advanceUntilIdle()
+            assertEquals(listOf(newer.id, older.id), viewModel.state.summaries.map { it.id })
+            assertTrue(viewModel.state.isLoaded)
+            assertEquals(loads, repository.summariesCalls)
+        }
+
     /** A swiped row must not bounce back while the store answers. */
     @Test
     fun deleteRemovesTheRowBeforeTheStoreAnswers() =

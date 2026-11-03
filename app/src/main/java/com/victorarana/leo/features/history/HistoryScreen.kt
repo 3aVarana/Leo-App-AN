@@ -1,5 +1,6 @@
 package com.victorarana.leo.features.history
 
+import android.text.format.DateFormat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -27,8 +28,11 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -45,6 +49,7 @@ import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.victorarana.leo.R
 import com.victorarana.leo.domain.RoundSummary
 import com.victorarana.leo.features.components.BackBar
@@ -106,6 +111,7 @@ fun HistoryScreen(
         if (state.isLoaded && !state.hasRounds) onEmpty()
     }
     val locale = currentLocale()
+    val is24Hour = rememberIs24HourClock()
     Column(
         modifier
             .fillMaxSize()
@@ -131,6 +137,7 @@ fun HistoryScreen(
                         HistoryRow(
                             summary = summary,
                             zone = state.zone,
+                            is24Hour = is24Hour,
                             onOpen = { onOpen(summary.id) },
                             onDelete = { onDelete(summary.id) },
                         )
@@ -238,13 +245,11 @@ private fun SwipeToDelete(
 private fun HistoryRow(
     summary: RoundSummary,
     zone: ZoneId,
+    is24Hour: Boolean,
     onOpen: () -> Unit,
     onDelete: () -> Unit,
 ) {
     val locale = currentLocale()
-    val is24Hour =
-        android.text.format.DateFormat
-            .is24HourFormat(LocalContext.current)
     val date = remember(summary.finishedAt, zone, locale) { rowDate(summary.finishedAt, zone, locale) }
     val time =
         remember(summary.finishedAt, zone, locale, is24Hour) { rowTime(summary.finishedAt, zone, locale, is24Hour) }
@@ -341,3 +346,18 @@ private fun ScoreAndDots(summary: RoundSummary) {
 @Composable
 private fun rowTextStyle() =
     LeoTextStyle(size = ROW_TEXT_SIZE, weight = LeoWeight.Semibold).toTextStyle().copy(color = LeoTheme.colors.ink)
+
+/**
+ * The device's 12 or 24 hour clock. It isn't part of the configuration, so changing it recomposes nothing: it is read
+ * again each time the screen resumes, as History's sections are.
+ */
+@Composable
+internal fun rememberIs24HourClock(): Boolean {
+    val context = LocalContext.current
+    var is24Hour by remember { mutableStateOf(DateFormat.is24HourFormat(context)) }
+    LifecycleResumeEffect(context) {
+        is24Hour = DateFormat.is24HourFormat(context)
+        onPauseOrDispose {}
+    }
+    return is24Hour
+}

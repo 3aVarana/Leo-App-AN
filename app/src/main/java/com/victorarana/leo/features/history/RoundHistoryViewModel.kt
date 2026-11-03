@@ -139,23 +139,34 @@ class RoundHistoryViewModel(
 
     /**
      * Deletes round [id], on [storeScope] like a save. The row leaves the list at once (a swiped row must not bounce
-     * back while the store answers, nor through another load that lands meanwhile, see [pendingDeletes]); then the
-     * list is read again, which puts the row back if the delete failed (iOS: no reload then, the row was never
-     * removed).
+     * back while the store answers, nor through another load that lands meanwhile, see [pendingDeletes]). Then, as on
+     * iOS, a delete that worked reads the list again, and one that failed is logged and doesn't: its row goes back
+     * where it was, so a store that also fails to read can't empty the list and close History.
      */
     fun delete(id: UUID) {
-        loading?.cancel()
+        val ageGroup = mutableState.value.ageGroup
+        val removed = mutableState.value.summaries.firstOrNull { it.id == id }
         pendingDeletes += id
         // Not loaded again yet: the list is only a guess until the store answers, so History doesn't close on an
         // empty list that the failed delete is about to put the round back into.
         publish { copy(summaries = summaries.filterNot { it.id == id }, isLoaded = false) }
         storeScope.launch {
-            try {
-                attempt("Couldn't delete round $id") { repository.delete(id) }
-            } finally {
-                pendingDeletes -= id
+            val failed =
+                try {
+                    attempt("Couldn't delete round $id") { repository.delete(id) }.isFailure
+                } finally {
+                    pendingDeletes -= id
+                }
+            if (!failed) {
+                reload()
+            } else if (mutableState.value.ageGroup == ageGroup) {
+                // Confirmed again unless another delete or a load is still on its way; those settle it.
+                val settled = pendingDeletes.isEmpty() && loading?.isActive != true
+                publish {
+                    val restored = summaries.filterNot { it.id == id } + listOfNotNull(removed)
+                    copy(summaries = restored.sortedByDescending { it.finishedAt }, isLoaded = isLoaded || settled)
+                }
             }
-            reload()
         }
     }
 

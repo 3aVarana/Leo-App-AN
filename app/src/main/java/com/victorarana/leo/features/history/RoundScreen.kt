@@ -14,7 +14,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -99,9 +98,7 @@ private fun kickerText(
     zone: ZoneId,
 ): String {
     val locale = currentLocale()
-    val is24Hour =
-        android.text.format.DateFormat
-            .is24HourFormat(LocalContext.current)
+    val is24Hour = rememberIs24HourClock()
     val dateTime =
         remember(round.finishedAt, zone, locale, is24Hour) { roundKicker(round.finishedAt, zone, locale, is24Hour) }
     return stringResource(R.string.round_kicker, dateTime, stringResource(round.ageGroup.displayNameRes))
