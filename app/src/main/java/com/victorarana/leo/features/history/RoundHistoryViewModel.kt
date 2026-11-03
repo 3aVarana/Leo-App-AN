@@ -23,7 +23,6 @@ import java.time.YearMonth
 import java.time.ZoneId
 import java.time.temporal.TemporalAdjusters
 import java.util.UUID
-import java.util.concurrent.ConcurrentHashMap
 
 private const val TAG = "RoundHistoryViewModel"
 
@@ -106,8 +105,11 @@ class RoundHistoryViewModel(
 
     private var loading: Job? = null
 
-    /** Rounds whose delete hasn't answered yet: no load shows them, even one that read the store before they left. */
-    private val pendingDeletes: MutableSet<UUID> = ConcurrentHashMap.newKeySet()
+    /**
+     * Rounds whose delete hasn't answered yet: no load shows them, even one that read the store before they left. Only
+     * touched on the main thread: loads run on `viewModelScope` and writes on the application's scope, both Main.
+     */
+    private val pendingDeletes = mutableSetOf<UUID>()
 
     /** Sets the age group History shows. A different one reloads; the same one does nothing. Null shows nothing. */
     fun setAgeGroup(ageGroup: AgeGroup?) {
@@ -141,7 +143,8 @@ class RoundHistoryViewModel(
      * Deletes round [id], on [storeScope] like a save. The row leaves the list at once (a swiped row must not bounce
      * back while the store answers, nor through another load that lands meanwhile, see [pendingDeletes]). Then, as on
      * iOS, a delete that worked reads the list again, and one that failed is logged and doesn't: its row goes back
-     * where it was, so a store that also fails to read can't empty the list and close History.
+     * where it was, so a failed delete can't empty the list. A read that fails after a delete that worked shows no
+     * rounds and closes History, like any failed load, as on iOS (`reload()` sets `summaries = []`).
      */
     fun delete(id: UUID) {
         val ageGroup = mutableState.value.ageGroup

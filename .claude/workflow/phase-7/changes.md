@@ -92,3 +92,9 @@ Commands after the fixes: `./gradlew assembleDebug` BUILD SUCCESSFUL; `./gradlew
 
 - **No "0 rounds read · 0% answered right".** iOS only shows History with rounds, read at once; here the list can be empty for a moment (a restored route before its load, the last round's delete before the store answers, review N5). The summary line is shown only when there are rounds; the title stays, so History doesn't flicker. Tests `theSummaryWaitsForRounds`, `theSummaryLeavesWhileTheLastDeleteWaits`.
 - **Section keys from their first round.** `"section-${section.rounds.first().id}"` instead of the index: still unique when a kind repeats, and a section's key no longer changes when a section above it is deleted.
+
+## Review notes (PR #12 fourth review)
+
+- **Not changed: `round_review_missed` stays a plain string.** The review asks for `<plurals>` because es/pt-BR read "Repasar 1 falladas" / "Revisar 1 erradas". iOS has the same single string with no plural variants (`Localizable.xcstrings`, "Review %lld missed"), and phase 6 decided plain strings for this case (phase-6 Q5, iOS parity). Left for the user to decide, a candidate for phase 8 (es and pt-BR complete).
+- **`delete` KDoc** now says that a read failing after a delete that worked shows no rounds and closes History, like any failed load, as on iOS.
+- **`pendingDeletes`** is a plain set: it is only touched on the main thread.
