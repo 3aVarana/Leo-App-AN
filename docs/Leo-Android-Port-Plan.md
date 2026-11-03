@@ -23,3 +23,4 @@ Each phase is run with `/port-phase <n>`, ends green (build, unit tests, lint) a
 - **Model download.** `DOWNLOADABLE` needs the app to start the download and show progress; iOS waits for the system.
 - **Locale phrase.** iOS starts instructions with Apple's "The person's locale is es_ES." Whether that helps Gemini Nano is measured in phase 9, not assumed.
 - **Content languages.** Gemini Nano's supported languages may differ from Apple's; `ContentLanguage` falls back to English for anything unsupported.
+- **Count strings without plural forms (phase 8).** `round_review_missed` ("Review %d missed"), like `review_count` and `quiz_topics_more` (phase-6 Q5), is a plain string as on iOS, so es and pt-BR read "Repasar 1 falladas" / "Revisar 1 erradas". Decide in phase 8 whether to make them `<plurals>` (raised in the PR #12 review, deferred by the user).
