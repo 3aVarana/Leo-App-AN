@@ -46,7 +46,7 @@ private const val MAX_NAMED_TOPICS = 3
  *
  * @param exerciseCount How many texts the round has.
  * @param topicNames This round's planned topics, in order. Empty until the round is prepared.
- * @param onHistory `null` hides the button: there is no saved round to show yet (phase 6 always passes `null`).
+ * @param onHistory `null` hides the button: the current age group has no saved round to show yet.
  */
 @Composable
 fun WelcomeScreen(

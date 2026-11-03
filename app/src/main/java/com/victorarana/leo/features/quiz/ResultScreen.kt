@@ -64,7 +64,7 @@ internal const val STACKED_ROW_FONT_SCALE = 1.3f
  * @param ageGroup The round just finished, for the kicker. Can differ from [historyAgeGroup] when the reader changes
  * age group in Settings before leaving Results.
  * @param onReview Opens Review at this position in the round's misses.
- * @param onHistory `null` hides the button: there is no saved round to show yet (phase 6 always passes `null`).
+ * @param onHistory `null` hides the button: the current age group has no saved round to show yet.
  * @param historyAgeGroup The age group in the current preferences, which picks the History button's variant.
  */
 @Composable

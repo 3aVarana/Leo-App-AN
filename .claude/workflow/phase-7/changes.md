@@ -103,3 +103,8 @@ Commands after the fixes: `./gradlew assembleDebug` BUILD SUCCESSFUL; `./gradlew
 
 - **Restore order tied to the store's.** `RoundHistoryDao.summaries` and the failed-delete restore in `RoundHistoryViewModel.delete` now point at each other: both sort newest first by `finishedAt` alone.
 - **Not changed: `sections` stays in the ViewModel file.** The review suggests moving `sections(...)` and `HistorySection` to `:domain`. iOS keeps both in `Features/History/RoundHistoryViewModel.swift`, not `Domain/`, and the port keeps iOS's layout so files compare side by side (CLAUDE.md, Architecture); the grouping is already covered by `RoundHistoryViewModelTests`.
+
+## Review notes (PR #12 sixth review)
+
+- **`onHistory` KDoc** on Welcome, Results and the quiz screen no longer says phase 6 always passes `null`.
+- **Not changed: the first weekday reads `Locale.getDefault()`.** The date formats read the configuration's locale; today both are the device locale. The ViewModel can't read `LocalConfiguration`, and a per-app language would also reset the default locale. Locale handling is reviewed as a whole in phase 8 (phase 6 deferred the same question for list and timer formatting).
