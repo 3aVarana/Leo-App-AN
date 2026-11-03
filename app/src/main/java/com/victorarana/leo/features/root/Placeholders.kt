@@ -21,7 +21,7 @@ import com.victorarana.leo.features.theme.toTextStyle
 // real screen arrives.
 //   HomePlaceholder        -> phase 6, the quiz screens (Welcome, Loading, Exercise, Result, Error)
 //   HistoryPlaceholder     -> phase 7, the round history
-//   OnboardingPlaceholder  -> phase 5, onboarding and the preferences editor
+//   (the "Open settings" link of HomePlaceholder -> phase 6, the Welcome screen's settings button)
 
 @Composable
 private fun PlaceholderScreen(
@@ -47,11 +47,13 @@ private fun PlaceholderText(
 @Composable
 fun HomePlaceholder(
     onHistory: () -> Unit,
+    onSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     PlaceholderScreen(modifier) {
         PlaceholderText("Home placeholder (phase 6)")
         PlaceholderText("Open history", Modifier.clickable(onClick = onHistory).padding(12.dp))
+        PlaceholderText("Open settings", Modifier.clickable(onClick = onSettings).padding(12.dp))
     }
 }
 
@@ -59,10 +61,4 @@ fun HomePlaceholder(
 @Composable
 fun HistoryPlaceholder(modifier: Modifier = Modifier) {
     PlaceholderScreen(modifier) { PlaceholderText("History placeholder (phase 7)") }
-}
-
-/** Phase 5 replaces this with onboarding. */
-@Composable
-fun OnboardingPlaceholder(modifier: Modifier = Modifier) {
-    PlaceholderScreen(modifier) { PlaceholderText("Onboarding placeholder (phase 5)") }
 }

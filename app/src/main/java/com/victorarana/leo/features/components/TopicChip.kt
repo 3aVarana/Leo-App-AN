@@ -36,13 +36,17 @@ private const val PRESSED_ALPHA = 0.7f
 private const val CHIP_SYMBOL_SIZE = 18f
 private val ChipShape = RoundedCornerShape(2.dp)
 
-/** A suggested topic the reader turns on or off. TalkBack reads it as a switch. */
+/**
+ * A suggested topic the reader turns on or off. TalkBack reads it as a switch. [hint] is read after the name:
+ * TalkBack has no accessibility hint, so it joins the description (iOS `accessibilityHint`).
+ */
 @Composable
 fun TopicChip(
     name: String,
     isOn: Boolean,
     onToggle: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    hint: String? = null,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -50,6 +54,7 @@ fun TopicChip(
         name = name,
         isOn = isOn,
         leadingIcon = if (isOn) R.drawable.ic_check else R.drawable.ic_add,
+        hint = hint,
         modifier =
             modifier
                 .alpha(if (isPressed) PRESSED_ALPHA else 1f)
@@ -102,6 +107,7 @@ private fun ChipLabel(
     modifier: Modifier = Modifier,
     leadingIcon: Int? = null,
     trailingIcon: Int? = null,
+    hint: String? = null,
 ) {
     val colors = LeoTheme.colors
     val foreground = if (isOn) colors.accent800 else colors.neutral700
@@ -116,7 +122,7 @@ private fun ChipLabel(
                 .background(if (isOn) colors.accent100 else Color.Transparent, ChipShape)
                 .then(if (isOn) Modifier else Modifier.border(1.dp, colors.divider, ChipShape))
                 .padding(vertical = 7.dp, horizontal = 12.dp)
-                .semantics(mergeDescendants = true) { contentDescription = name },
+                .semantics(mergeDescendants = true) { contentDescription = if (hint == null) name else "$name. $hint" },
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

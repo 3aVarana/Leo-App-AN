@@ -4,16 +4,19 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.victorarana.leo.domain.AgeGroup
 import com.victorarana.leo.domain.ModelAvailability
 import com.victorarana.leo.domain.ModelUnavailableReason
+import com.victorarana.leo.domain.TopicNames
 import com.victorarana.leo.domain.readerPreferencesFixture
 import com.victorarana.leo.features.theme.LeoTheme
 import com.victorarana.leo.support.PreferencesRepositorySpy
 import com.victorarana.leo.support.StubModelAvailabilityProvider
+import com.victorarana.leo.support.StubTopicReviewRepository
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -31,7 +34,10 @@ class RootScreenTests {
 
     private fun show() {
         // The intro blocks taps while it plays; these tests are about the gates.
-        val viewModel = RootViewModel(repository, availability).apply { onIntroPlayed() }
+        val viewModel =
+            RootViewModel(repository, availability, StubTopicReviewRepository(), TopicNames.English).apply {
+                onIntroPlayed()
+            }
         composeRule.setContent { LeoTheme { RootScreen(viewModel) } }
         composeRule.waitForIdle()
     }
@@ -58,7 +64,7 @@ class RootScreenTests {
     @Test
     fun availableWithoutPreferencesShowsOnboarding() {
         show()
-        composeRule.onNodeWithText("Onboarding placeholder (phase 5)").assertIsDisplayed()
+        composeRule.onNodeWithText("How old are you?").assertIsDisplayed()
     }
 
     @Test
@@ -94,6 +100,25 @@ class RootScreenTests {
         availability.set(ModelAvailability.Available)
         composeRule.waitForIdle()
         composeRule.onNodeWithText("History placeholder (phase 7)").assertIsDisplayed()
+    }
+
+    /** The same check mid-onboarding keeps the reader on the topics screen, with their age still picked. */
+    @Test
+    fun onboardingProgressSurvivesTheModelBrieflyBecomingUnavailable() {
+        show()
+        composeRule.onNodeWithText("9 to 11").performClick()
+        composeRule.onNodeWithText("Continue").performClick()
+        composeRule.waitForIdle()
+
+        availability.set(ModelAvailability.Unavailable(ModelUnavailableReason.OTHER))
+        composeRule.waitForIdle()
+        availability.set(ModelAvailability.Available)
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("What do you like reading about?").assertIsDisplayed()
+
+        composeRule.runOnUiThread { composeRule.activity.onBackPressedDispatcher.onBackPressed() }
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Continue").assertIsEnabled()
     }
 
     @Test

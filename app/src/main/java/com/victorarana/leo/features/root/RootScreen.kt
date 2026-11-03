@@ -5,12 +5,21 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.compose.rememberNavController
+import com.victorarana.leo.domain.AgeGroup
 import com.victorarana.leo.domain.ModelAvailability
+import com.victorarana.leo.features.preferences.OnboardingScreen
+import com.victorarana.leo.features.preferences.PreferencesEditorViewModel
 import com.victorarana.leo.features.theme.leoScreenBackground
 
 /** Which screen the gates pick (iOS `RootView.body`'s switch). */
@@ -32,6 +41,10 @@ fun RootScreen(
     // destinations' ViewModels. `rememberSaveable` state inside destinations still resets when the graph leaves
     // composition, so anything that must survive this (a round in progress) belongs in a ViewModel.
     val navController = rememberNavController()
+    // Onboarding's back stack and age pick, hoisted for the same reason: coming back from another app mid-onboarding
+    // shouldn't restart it at the age picker.
+    val onboardingNavController = rememberNavController()
+    var onboardingSelection by rememberSaveable { mutableStateOf<AgeGroup?>(null) }
 
     val availability = state.availability
     // The launch frame holds until the first screen is known: AICore has answered, and preferences matter only if
@@ -57,8 +70,23 @@ fun RootScreen(
             Crossfade(targetState = gate, label = "root-gate") {
                 when (it) {
                     Gate.Loading -> Box(Modifier.fillMaxSize().leoScreenBackground())
-                    Gate.Onboarding -> OnboardingPlaceholder()
-                    Gate.App -> LeoNavHost(navController = navController)
+                    Gate.Onboarding -> {
+                        // In the Activity's store (the gate isn't a destination), so a rotation keeps the draft.
+                        // It then outlives onboarding until the Activity finishes; harmless, since the gate never
+                        // comes back and `save()` already cancelled its review.
+                        val editor =
+                            viewModel<PreferencesEditorViewModel>(
+                                key = "onboarding",
+                                factory = viewModelFactory { initializer { viewModel.makeOnboardingEditor() } },
+                            )
+                        OnboardingScreen(
+                            editor = editor,
+                            navController = onboardingNavController,
+                            selection = onboardingSelection,
+                            onSelect = { group -> onboardingSelection = group },
+                        )
+                    }
+                    Gate.App -> LeoNavHost(navController = navController, root = viewModel)
                 }
             }
         } else {
