@@ -6,6 +6,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.victorarana.leo.domain.AgeGroup
@@ -17,6 +18,7 @@ import com.victorarana.leo.features.theme.LeoTheme
 import com.victorarana.leo.support.PreferencesRepositorySpy
 import com.victorarana.leo.support.StubModelAvailabilityProvider
 import com.victorarana.leo.support.StubTopicReviewRepository
+import com.victorarana.leo.support.testQuiz
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -35,7 +37,7 @@ class RootScreenTests {
     private fun show() {
         // The intro blocks taps while it plays; these tests are about the gates.
         val viewModel =
-            RootViewModel(repository, availability, StubTopicReviewRepository(), TopicNames.English).apply {
+            RootViewModel(repository, availability, StubTopicReviewRepository(), TopicNames.English, testQuiz()).apply {
                 onIntroPlayed()
             }
         composeRule.setContent { LeoTheme { RootScreen(viewModel) } }
@@ -71,7 +73,7 @@ class RootScreenTests {
     fun availableWithPreferencesShowsTheApp() {
         repository.stored = preferences
         show()
-        composeRule.onNodeWithText("Home placeholder (phase 6)").assertIsDisplayed()
+        composeRule.onNodeWithText("Start").assertIsDisplayed()
     }
 
     /** The model finishing its download swaps the screen without a restart. */
@@ -84,7 +86,7 @@ class RootScreenTests {
 
         availability.set(ModelAvailability.Available)
         composeRule.waitForIdle()
-        composeRule.onNodeWithText("Home placeholder (phase 6)").assertIsDisplayed()
+        composeRule.onNodeWithText("Start").assertIsDisplayed()
     }
 
     /** A check that briefly says "unavailable" doesn't reset the back stack. */
@@ -92,14 +94,14 @@ class RootScreenTests {
     fun theBackStackSurvivesTheModelBrieflyBecomingUnavailable() {
         repository.stored = preferences
         show()
-        composeRule.onNodeWithText("Open history").performClick()
+        composeRule.onNodeWithContentDescription("Settings").performClick()
         composeRule.waitForIdle()
 
         availability.set(ModelAvailability.Unavailable(ModelUnavailableReason.OTHER))
         composeRule.waitForIdle()
         availability.set(ModelAvailability.Available)
         composeRule.waitForIdle()
-        composeRule.onNodeWithText("History placeholder (phase 7)").assertIsDisplayed()
+        composeRule.onNodeWithText("Reading timer").assertIsDisplayed()
     }
 
     /** The same check mid-onboarding keeps the reader on the topics screen, with their age still picked. */
@@ -121,16 +123,6 @@ class RootScreenTests {
         composeRule.onNodeWithText("Continue").assertIsEnabled()
     }
 
-    @Test
-    fun homeNavigatesToHistoryAndBackPops() {
-        repository.stored = preferences
-        show()
-        composeRule.onNodeWithText("Open history").performClick()
-        composeRule.waitForIdle()
-        composeRule.onNodeWithText("History placeholder (phase 7)").assertIsDisplayed()
-
-        composeRule.runOnUiThread { composeRule.activity.onBackPressedDispatcher.onBackPressed() }
-        composeRule.waitForIdle()
-        composeRule.onNodeWithText("Home placeholder (phase 6)").assertIsDisplayed()
-    }
+    // `homeNavigatesToHistoryAndBackPops` moves to phase 7: with no saved round the History buttons are hidden
+    // (phase-6 Q3), so Home has no way to History until `RoundHistoryViewModel.hasRounds` exists.
 }

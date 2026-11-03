@@ -19,6 +19,7 @@ import com.victorarana.leo.support.PreferencesRepositorySpy
 import com.victorarana.leo.support.StubModelAvailabilityProvider
 import com.victorarana.leo.support.StubTopicReviewRepository
 import com.victorarana.leo.support.preferencesEditorFixture
+import com.victorarana.leo.support.testQuiz
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -35,8 +36,13 @@ class OnboardingScreenTests {
 
     private fun show() {
         val root =
-            RootViewModel(repository, StubModelAvailabilityProvider(), StubTopicReviewRepository(), TopicNames.English)
-                .apply { onIntroPlayed() }
+            RootViewModel(
+                repository,
+                StubModelAvailabilityProvider(),
+                StubTopicReviewRepository(),
+                TopicNames.English,
+                testQuiz(),
+            ).apply { onIntroPlayed() }
         composeRule.setContent { LeoTheme { RootScreen(root) } }
         composeRule.waitForIdle()
     }
@@ -108,6 +114,6 @@ class OnboardingScreenTests {
         composeRule.waitForIdle()
 
         assertEquals(listOf(AgeGroup.NINE), repository.saved.map { it.ageGroup })
-        composeRule.onNodeWithText("Home placeholder (phase 6)").assertIsDisplayed()
+        composeRule.onNodeWithText("Start").assertIsDisplayed()
     }
 }

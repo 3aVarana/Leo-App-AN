@@ -1,6 +1,5 @@
 package com.victorarana.leo.features.root
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,9 +18,8 @@ import com.victorarana.leo.features.theme.toTextStyle
 // TEMPORARY. These stand in for screens later phases port, so the app shell and the navigation graph can be
 // built, tested and run now. Verbatim text on purpose: no string resources, because each one is deleted when its
 // real screen arrives.
-//   HomePlaceholder        -> phase 6, the quiz screens (Welcome, Loading, Exercise, Result, Error)
-//   HistoryPlaceholder     -> phase 7, the round history
-//   (the "Open settings" link of HomePlaceholder -> phase 6, the Welcome screen's settings button)
+//   HistoryPlaceholder     -> phase 7, the round history (no entry point until then: the History buttons stay
+//                             hidden, phase-6 Q3)
 
 @Composable
 private fun PlaceholderScreen(
@@ -41,20 +39,6 @@ private fun PlaceholderText(
     modifier: Modifier = Modifier,
 ) {
     BasicText(text, modifier, style = LeoTextStyle.body.toTextStyle().copy(color = LeoTheme.colors.ink))
-}
-
-/** Phase 6 replaces this with the quiz screens. The link is how the graph is exercised until then. */
-@Composable
-fun HomePlaceholder(
-    onHistory: () -> Unit,
-    onSettings: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    PlaceholderScreen(modifier) {
-        PlaceholderText("Home placeholder (phase 6)")
-        PlaceholderText("Open history", Modifier.clickable(onClick = onHistory).padding(12.dp))
-        PlaceholderText("Open settings", Modifier.clickable(onClick = onSettings).padding(12.dp))
-    }
 }
 
 /** Phase 7 replaces this with the round history. */

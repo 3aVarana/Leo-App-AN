@@ -5,6 +5,7 @@ import android.database.ContentObserver
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
+import android.view.accessibility.AccessibilityManager
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -98,3 +99,25 @@ const val DOT_FONT_SCALE_CAP = 1.46f
 
 /** The subheadline's `accessibility1` cap relative to the default size (25 / 15). */
 const val HEADER_BUTTON_FONT_SCALE_CAP = 1.67f
+
+/** Replaces the system setting, for tests and previews (iOS: the `accessibilityVoiceOverEnabled` environment key). */
+val LocalTalkBackOn = compositionLocalOf<Boolean?> { null }
+
+/**
+ * Whether a screen reader is running: touch exploration is on, which is what TalkBack turns on. The reading timer
+ * stays off while it is, since reading by ear takes much longer (iOS `accessibilityVoiceOverEnabled`). Follows the
+ * setting while the screen is shown; [LocalTalkBackOn] overrides it.
+ */
+@Composable
+fun rememberTalkBackOn(): Boolean {
+    val context = LocalContext.current
+    val manager = remember(context) { context.getSystemService(AccessibilityManager::class.java) }
+    var on by remember(manager) { mutableStateOf(manager?.isTouchExplorationEnabled == true) }
+    DisposableEffect(manager) {
+        val listener = AccessibilityManager.TouchExplorationStateChangeListener { on = it }
+        manager?.addTouchExplorationStateChangeListener(listener)
+        on = manager?.isTouchExplorationEnabled == true
+        onDispose { manager?.removeTouchExplorationStateChangeListener(listener) }
+    }
+    return LocalTalkBackOn.current ?: on
+}
