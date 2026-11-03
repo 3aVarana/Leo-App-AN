@@ -108,3 +108,9 @@ Commands after the fixes: `./gradlew assembleDebug` BUILD SUCCESSFUL; `./gradlew
 
 - **`onHistory` KDoc** on Welcome, Results and the quiz screen no longer says phase 6 always passes `null`.
 - **Not changed: the first weekday reads `Locale.getDefault()`.** The date formats read the configuration's locale; today both are the device locale. The ViewModel can't read `LocalConfiguration`, and a per-app language would also reset the default locale. Locale handling is reviewed as a whole in phase 8 (phase 6 deferred the same question for list and timer formatting).
+
+## Review notes (PR #12 seventh review)
+
+- **`RoundHistoryUiState` is `@Immutable`**, so History can skip recomposing for an equal state (`ZoneId` is unstable to Compose).
+- **Not changed: `openedRound` isn't cleared.** It is one round, replaced by the next tap; clearing it on History's resume could race the round page's exit transition, which still reads it, and make it load again.
+- **Not changed: restore order.** Both sides already sort newest first by `finishedAt` and point at each other (fifth review). Rounds with the same `finishedAt` to the millisecond are not a realistic case for rounds a reader finishes one at a time.

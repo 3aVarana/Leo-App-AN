@@ -1,6 +1,7 @@
 package com.victorarana.leo.features.history
 
 import android.util.Log
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.victorarana.leo.data.repositories.RoundHistoryRepository
@@ -59,7 +60,11 @@ data class HistorySection(
  * @property zone The time zone the sections and the rows' clock times are written in.
  * @property openedRound The round the reader tapped, loaded before the round page opens (see
  * [RoundHistoryViewModel.open]).
+ *
+ * `@Immutable` because Compose can't tell that `ZoneId` and the domain lists never change, so History couldn't skip
+ * recomposing for an equal state otherwise.
  */
+@Immutable
 data class RoundHistoryUiState(
     val ageGroup: AgeGroup? = null,
     val summaries: List<RoundSummary> = emptyList(),
