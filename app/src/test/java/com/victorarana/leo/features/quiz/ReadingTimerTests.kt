@@ -1,9 +1,12 @@
 package com.victorarana.leo.features.quiz
 
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
@@ -54,7 +57,7 @@ class ReadingTimerTests {
     @Test
     fun countsDownOneSecondAtATime() {
         composeRule.mainClock.autoAdvance = false
-        composeRule.setContent { LeoTheme { ReadingTimer(total = 30.seconds, resetKey = 1, onTimeUp = {}) } }
+        composeRule.setContent { LeoTheme { ReadingTimer(total = 30.seconds, onTimeUp = {}) } }
         composeRule.mainClock.advanceTimeByFrame()
         assertTimeLeft("30 seconds")
         composeRule.mainClock.advanceTimeBy(1_000)
@@ -66,7 +69,7 @@ class ReadingTimerTests {
     @Test
     fun spokenValueUsesMinutesAndSecondsAndOmitsZeroUnits() {
         composeRule.mainClock.autoAdvance = false
-        composeRule.setContent { LeoTheme { ReadingTimer(total = 90.seconds, resetKey = 1, onTimeUp = {}) } }
+        composeRule.setContent { LeoTheme { ReadingTimer(total = 90.seconds, onTimeUp = {}) } }
         composeRule.mainClock.advanceTimeByFrame()
         assertTimeLeft("1 minute, 30 seconds")
         composeRule.mainClock.advanceTimeBy(30_000)
@@ -77,7 +80,7 @@ class ReadingTimerTests {
     fun callsTimeUpOnceAtZero() {
         var timeUps = 0
         composeRule.mainClock.autoAdvance = false
-        composeRule.setContent { LeoTheme { ReadingTimer(total = 3.seconds, resetKey = 1, onTimeUp = { timeUps++ }) } }
+        composeRule.setContent { LeoTheme { ReadingTimer(total = 3.seconds, onTimeUp = { timeUps++ }) } }
         composeRule.mainClock.advanceTimeBy(2_900)
         assertEquals(0, timeUps)
         composeRule.mainClock.advanceTimeBy(200)
@@ -95,7 +98,7 @@ class ReadingTimerTests {
         composeRule.mainClock.autoAdvance = false
         composeRule.setContent {
             CompositionLocalProvider(LocalLifecycleOwner provides owner) {
-                LeoTheme { ReadingTimer(total = 30.seconds, resetKey = 1, onTimeUp = {}) }
+                LeoTheme { ReadingTimer(total = 30.seconds, onTimeUp = {}) }
             }
         }
         composeRule.mainClock.advanceTimeBy(2_500)
@@ -117,7 +120,7 @@ class ReadingTimerTests {
     fun keepsTheRemainderAcrossARecreation() {
         val tester = StateRestorationTester(composeRule)
         composeRule.mainClock.autoAdvance = false
-        tester.setContent { LeoTheme { ReadingTimer(total = 30.seconds, resetKey = 1, onTimeUp = {}) } }
+        tester.setContent { LeoTheme { ReadingTimer(total = 30.seconds, onTimeUp = {}) } }
         composeRule.mainClock.advanceTimeBy(5_000)
         assertTimeLeft("25 seconds")
 
@@ -126,15 +129,16 @@ class ReadingTimerTests {
         assertTimeLeft("25 seconds")
     }
 
+    /** `QuizScreen` wraps each exercise in `key(exercise.id)`; that is what gives every exercise a full timer. */
     @Test
     fun aNewExerciseStartsFull() {
         val exercise = exerciseFixture()
         composeRule.mainClock.autoAdvance = false
-        var key by mutableStateOf<Any>(exercise.id)
-        composeRule.setContent { LeoTheme { ReadingTimer(total = 30.seconds, resetKey = key, onTimeUp = {}) } }
+        var exerciseId by mutableStateOf(exercise.id)
+        composeRule.setContent { LeoTheme { key(exerciseId) { ReadingTimer(total = 30.seconds, onTimeUp = {}) } } }
         composeRule.mainClock.advanceTimeBy(5_000)
         assertTimeLeft("25 seconds")
-        key = exerciseFixture().id
+        exerciseId = exerciseFixture().id
         composeRule.mainClock.advanceTimeByFrame()
         assertTimeLeft("30 seconds")
     }
@@ -144,6 +148,11 @@ class ReadingTimerTests {
     private fun showExercise(
         isReadingTimed: Boolean,
         talkBackOn: Boolean,
+    ) = showExercise(isReadingTimed, mutableStateOf(talkBackOn))
+
+    private fun showExercise(
+        isReadingTimed: Boolean,
+        talkBackOn: State<Boolean>,
     ) {
         val exercise = exerciseFixture()
         val state =
@@ -154,7 +163,7 @@ class ReadingTimerTests {
                 roundAgeGroup = AgeGroup.NINE,
             )
         composeRule.setContent {
-            CompositionLocalProvider(LocalTalkBackOn provides talkBackOn) {
+            CompositionLocalProvider(LocalTalkBackOn provides talkBackOn.value) {
                 LeoTheme {
                     ExerciseScreen(
                         state = state,
@@ -185,5 +194,29 @@ class ReadingTimerTests {
     fun timerIsAbsentWithTalkBackOn() {
         showExercise(isReadingTimed = true, talkBackOn = true)
         composeRule.onNodeWithContentDescription(label).assertDoesNotExist()
+    }
+
+    /** Switching TalkBack on and off mid-passage hides and shows the timer without restarting it. */
+    @Test
+    fun timerKeepsItsTimeAcrossATalkBackToggle() {
+        val talkBackOn = mutableStateOf(false)
+        composeRule.mainClock.autoAdvance = false
+        showExercise(isReadingTimed = true, talkBackOn = talkBackOn)
+        composeRule.mainClock.advanceTimeBy(5_000)
+        val afterFiveSeconds =
+            composeRule
+                .onNodeWithContentDescription(label)
+                .fetchSemanticsNode()
+                .config[SemanticsProperties.StateDescription]
+
+        // With the clock paused nothing else flushes snapshot writes, so each toggle is applied as a snapshot.
+        Snapshot.withMutableSnapshot { talkBackOn.value = true }
+        composeRule.mainClock.advanceTimeByFrame()
+        composeRule.onNodeWithContentDescription(label).assertDoesNotExist()
+        composeRule.mainClock.advanceTimeBy(10_000)
+
+        Snapshot.withMutableSnapshot { talkBackOn.value = false }
+        composeRule.mainClock.advanceTimeByFrame()
+        assertTimeLeft(afterFiveSeconds)
     }
 }

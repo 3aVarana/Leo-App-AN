@@ -18,10 +18,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -73,32 +75,55 @@ internal fun spokenDuration(
 }
 
 /**
+ * The seconds left on a [ReadingTimer]. Hoisted out of the timer so the count survives the timer leaving and
+ * re-entering composition, as it does when TalkBack is switched on and off while reading.
+ */
+@Stable
+class ReadingTimerState(
+    initialRemaining: Long,
+) {
+    var remaining: Long by mutableLongStateOf(initialRemaining)
+        internal set
+
+    companion object {
+        val Saver: Saver<ReadingTimerState, Long> = Saver(save = { it.remaining }, restore = { ReadingTimerState(it) })
+    }
+}
+
+/**
+ * A full [ReadingTimerState] for [total], saved across recreation so a rotation keeps the seconds left. It does
+ * not reset by itself: the caller resets it per exercise by wrapping the screen in `key(exercise.id)`.
+ */
+@Composable
+fun rememberReadingTimerState(total: Duration): ReadingTimerState =
+    rememberSaveable(saver = ReadingTimerState.Saver) { ReadingTimerState(total.inWholeSeconds) }
+
+/**
  * The time left to read, and a bar that empties with it. Counts down only while the screen is resumed (iOS: while
  * `scenePhase == .active`), and calls [onTimeUp] at zero. Port of the private `ReadingTimer`.
  *
- * The seconds left are `rememberSaveable`, keyed by [resetKey] (the exercise), so a rotation keeps them and each
- * exercise starts full. A partial second is lost whenever the timer pauses, exactly as on iOS.
+ * A partial second is lost whenever the timer pauses, exactly as on iOS.
  */
 @Composable
 fun ReadingTimer(
     total: Duration,
-    resetKey: Any,
     onTimeUp: () -> Unit,
     modifier: Modifier = Modifier,
+    state: ReadingTimerState = rememberReadingTimerState(total),
 ) {
     val totalSeconds = total.inWholeSeconds
-    var remaining by rememberSaveable(resetKey) { mutableLongStateOf(totalSeconds) }
     val currentOnTimeUp by rememberUpdatedState(onTimeUp)
     val lifecycleOwner = LocalLifecycleOwner.current
-    LaunchedEffect(lifecycleOwner, resetKey) {
+    LaunchedEffect(lifecycleOwner, state) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            while (remaining > 0) {
+            while (state.remaining > 0) {
                 delay(STEP_MILLIS)
-                remaining -= 1
+                state.remaining -= 1
             }
             currentOnTimeUp()
         }
     }
+    val remaining = state.remaining
 
     val colors = LeoTheme.colors
     val locale = LocalConfiguration.current.locales[0]

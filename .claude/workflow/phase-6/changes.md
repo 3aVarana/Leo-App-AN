@@ -81,3 +81,13 @@ Commands: `./gradlew ktlintFormat`; `./gradlew :app:testDebugUnitTest --tests '*
 ## Not run: needs a device
 
 No Android device is connected. Not done: a live round on Gemini Nano; `BACKGROUND_USE_BLOCKED` behavior and the pause/resume while another app is in front; the timer in the background and across rotation on a real device; TalkBack (headings, Loading re-announcement, option values and no click when answered, "Review" action on missed rows, timer node, question focus after "Answer the question"); haptic feel (`Confirm`/`Reject` exist on the BOM's Compose, effect on device); shake and scroll-to-feedback with Remove animations on; process-death restore of Review (route pops); system back from Home (task goes to the background on API 31+); `@LiveModel` instrumented tests (`connectedDebugAndroidTest`).
+
+## CI review nits (round 3, 2026-11-03)
+
+The advisory "Claude Review" check on the pull request found nothing blocking; the user asked for its two timer nits to be fixed.
+
+- `ReadingTimer.kt`: the seconds left moved out of the timer into `ReadingTimerState` (+ `rememberReadingTimerState(total)`, saved across recreation with its own `Saver`). `ReadingTimer` takes the state as a parameter that defaults to a fresh one; the `resetKey` parameter is gone. The per-exercise reset comes from `key(exercise.id)` in `QuizScreen`, which the KDoc now says.
+- `ExerciseScreen.kt`: holds the `ReadingTimerState` for the exercise and passes it to the bottom bar, so switching TalkBack on and off while reading hides and shows the timer without restarting the countdown. `ExerciseBottomBar` takes the state instead of the exercise id.
+- `ReadingTimerTests.kt`: `resetKey` removed; `aNewExerciseStartsFull` wraps the timer in `key(exerciseId)` as `QuizScreen` does; new `timerKeepsItsTimeAcrossATalkBackToggle` (mutation-checked: fails when the bottom bar gets a fresh state). With the test clock paused, nothing else flushes snapshot writes, so the test toggles TalkBack with `Snapshot.withMutableSnapshot`.
+- The other two nits need no code change: AICore rejecting a request between ON_PAUSE and ON_STOP is a device check (added to the NOT RUN list), and `applicationScope` on `Dispatchers.Main` is a deliberate composition-root choice.
+- Commands: `./gradlew :domain:test testDebugUnitTest detekt ktlintCheck lintDebug`: BUILD SUCCESSFUL, 560 tests, 0 failures.

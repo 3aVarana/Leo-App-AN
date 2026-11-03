@@ -110,6 +110,9 @@ fun ExerciseScreen(
 
     val talkBackOn = rememberTalkBackOn()
     val readingTime = state.readingTime.takeIf { isReadingTimed && !talkBackOn }
+    // Held here, not in the timer, so switching TalkBack on and off mid-passage doesn't restart the count.
+    // `QuizScreen` keys this screen by exercise, which is what gives every exercise a full timer.
+    val timerState = rememberReadingTimerState(state.readingTime ?: Duration.ZERO)
     val hasBottomBar = isReading || verdict != null
     Column(
         modifier
@@ -157,7 +160,7 @@ fun ExerciseScreen(
                 }
             }
         }
-        ExerciseBottomBar(state, exercise.id, verdict, readingTime, onFinishReading, onNext)
+        ExerciseBottomBar(state, verdict, readingTime, timerState, onFinishReading, onNext)
     }
 }
 
@@ -199,9 +202,9 @@ private fun ExerciseEffects(
 @Composable
 private fun ExerciseBottomBar(
     state: QuizUiState,
-    exerciseId: Any,
     verdict: Boolean?,
     readingTime: Duration?,
+    timerState: ReadingTimerState,
     onFinishReading: () -> Unit,
     onNext: () -> Unit,
 ) {
@@ -209,7 +212,7 @@ private fun ExerciseBottomBar(
         LeoBottomBar {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 if (readingTime != null) {
-                    ReadingTimer(total = readingTime, resetKey = exerciseId, onTimeUp = onFinishReading)
+                    ReadingTimer(total = readingTime, onTimeUp = onFinishReading, state = timerState)
                 }
                 LeoButton(
                     text = stringResource(R.string.quiz_answer_question),
